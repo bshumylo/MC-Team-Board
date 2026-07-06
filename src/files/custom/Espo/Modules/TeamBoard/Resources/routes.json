@@ -8,5 +8,10 @@
         "route": "/TeamBoard/move",
         "method": "post",
         "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostMove"
+    },
+    {
+        "route": "/TeamBoard/removeMember",
+        "method": "post",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostRemoveMember"
     }
 ]

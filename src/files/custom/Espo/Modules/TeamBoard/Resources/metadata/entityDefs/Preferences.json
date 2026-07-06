@@ -1,0 +1,11 @@
+{
+    "fields": {
+        "teamBoardOrder": {
+            "type": "jsonArray",
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "customizationDisabled": true,
+            "utility": true
+        }
+    }
+}

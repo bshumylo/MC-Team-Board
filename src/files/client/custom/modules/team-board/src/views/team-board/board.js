@@ -3,12 +3,17 @@ import View from 'view';
 /**
  * Team Board — kanban-style board of teams.
  *
- * Columns are teams; cards are team members grouped by their position
- * within the team (stored in the Team-User relationship): Supervisor
- * (muted, advisory), Leader, Vice Leader, Members.
+ * Columns are teams; cards are team members grouped hierarchically by
+ * their position within the team (stored in the Team-User relationship):
+ * Leader, Vice Leader, Members. Supervisors are shown as small avatars
+ * in the column header corner.
  *
  * Drag & drop between columns changes the team; drag & drop between
- * groups of one column changes the position. Saved immediately.
+ * groups of one column changes the position; drag & drop onto the empty
+ * area outside the columns removes the user from the team; holding
+ * Ctrl/Alt while dropping adds the user to the target team without
+ * removing from the source one. Columns themselves can be reordered by
+ * dragging their headers; the order is saved per user (Preferences).
  */
 class TeamBoardView extends View {
 
@@ -44,8 +49,31 @@ class TeamBoardView extends View {
             );
         },
         /** @this TeamBoardView */
+        'click [data-action="addToTeam"]': function (e) {
+            const el = e.currentTarget;
+
+            this.move(
+                el.dataset.userId,
+                el.dataset.toTeamId,
+                null,
+                'Member',
+                {add: true}
+            );
+        },
+        /** @this TeamBoardView */
+        'click [data-action="removeFromTeam"]': function (e) {
+            const el = e.currentTarget;
+
+            this.removeMember(el.dataset.userId, el.dataset.teamId);
+        },
+        /** @this TeamBoardView */
         'click [data-action="toggleColumn"]': function (e) {
-            if (e.target.closest('.tb-card') || e.target.closest('.dropdown-menu')) {
+            if (
+                e.target.closest('.tb-card') ||
+                e.target.closest('.dropdown-menu') ||
+                e.target.closest('a') ||
+                e.target.closest('.tb-sups')
+            ) {
                 return;
             }
 
@@ -54,7 +82,7 @@ class TeamBoardView extends View {
     }
 
     setup() {
-        this.boardData = {teams: [], positionList: [], canManage: false};
+        this.boardData = {teams: [], positionList: [], canManage: false, totalUnique: 0};
 
         this.wait(
             Espo.Ajax.getRequest('TeamBoard/data')
@@ -67,22 +95,62 @@ class TeamBoardView extends View {
     data() {
         const canManage = this.boardData.canManage;
 
-        const teams = this.boardData.teams.map(team => {
+        const teams = this.applyOrder(this.boardData.teams).map(team => {
+            const supervisors = team.members
+                .filter(member => this.normalizePosition(member.position) === 'Supervisor')
+                .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                .map(member => ({
+                    id: member.id,
+                    teamId: team.id,
+                    canDrag: canManage,
+                    tooltip: this.translate('Supervisor', 'positions', 'TeamBoard') +
+                        ': ' + member.name,
+                    avatarHtml: this.getHelper().getAvatarHtml(member.id, 'small', 20, 'tb-sup-img'),
+                }));
+
             return {
                 id: team.id,
                 name: team.name,
                 count: team.members.length,
+                supervisors: supervisors,
+                hasSupervisors: supervisors.length > 0,
                 groups: this.composeGroups(team, canManage),
             };
         });
 
         return {
             title: this.translate('Team Board', 'labels', 'TeamBoard'),
+            totalUnique: this.boardData.totalUnique || 0,
+            uniqueLabel: this.translate('Unique members', 'labels', 'TeamBoard'),
             noTeams: teams.length === 0,
             noTeamsLabel: this.translate('No teams', 'labels', 'TeamBoard'),
+            removeDropLabel: this.translate('Drop here to remove', 'labels', 'TeamBoard'),
             canManage: canManage,
             teams: teams,
         };
+    }
+
+    /**
+     * Sorts teams by the order saved in user preferences.
+     * Teams not present in the saved order go to the end
+     * (in the server order, i.e. alphabetically).
+     *
+     * @private
+     */
+    applyOrder(teams) {
+        const saved = this.getPreferences().get('teamBoardOrder');
+
+        if (!Array.isArray(saved) || saved.length === 0) {
+            return teams;
+        }
+
+        const index = id => {
+            const i = saved.indexOf(id);
+
+            return i === -1 ? saved.length : i;
+        };
+
+        return [...teams].sort((a, b) => index(a.id) - index(b.id));
     }
 
     /**
@@ -90,7 +158,6 @@ class TeamBoardView extends View {
      */
     composeGroups(team, canManage) {
         const defs = [
-            {position: 'Supervisor', labelKey: 'Supervisors', cls: 'tb-group-supervisor'},
             {position: 'Leader', labelKey: 'Leader', cls: 'tb-group-leader'},
             {position: 'Vice Leader', labelKey: 'Vice Leader', cls: 'tb-group-vice'},
             {position: 'Member', labelKey: 'Members', cls: 'tb-group-member'},
@@ -102,8 +169,8 @@ class TeamBoardView extends View {
                 .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
                 .map(member => this.composeMember(member, team, canManage));
 
-            const label = def.position === 'Supervisor' || def.position === 'Member' ?
-                this.translate(def.labelKey, 'labels', 'TeamBoard') :
+            const label = def.position === 'Member' ?
+                this.translate('Members', 'labels', 'TeamBoard') :
                 this.translate(def.position, 'positions', 'TeamBoard');
 
             return {
@@ -137,11 +204,23 @@ class TeamBoardView extends View {
                 label: this.translate(item, 'positions', 'TeamBoard'),
             }));
 
+        const memberTeamIds = this.boardData.teams
+            .filter(item => item.members.some(m => m.id === member.id))
+            .map(item => item.id);
+
         const menuTeams = this.boardData.teams
             .filter(item => item.id !== team.id)
             .map(item => ({
                 toTeamId: item.id,
                 fromTeamId: team.id,
+                userId: member.id,
+                label: item.name,
+            }));
+
+        const menuAddTeams = this.boardData.teams
+            .filter(item => !memberTeamIds.includes(item.id))
+            .map(item => ({
+                toTeamId: item.id,
                 userId: member.id,
                 label: item.name,
             }));
@@ -154,11 +233,13 @@ class TeamBoardView extends View {
             positionLabel: positionLabel,
             avatarHtml: this.getHelper().getAvatarHtml(member.id, 'small', 32, 'tb-avatar-img'),
             isLeader: position === 'Leader',
-            isSupervisor: position === 'Supervisor',
             canManage: canManage,
             menuPositions: menuPositions,
             menuTeams: menuTeams,
             hasMenuTeams: menuTeams.length > 0,
+            menuAddTeams: menuAddTeams,
+            hasMenuAddTeams: menuAddTeams.length > 0,
+            removeLabel: this.translate('Remove from team', 'labels', 'TeamBoard'),
         };
     }
 
@@ -177,28 +258,80 @@ class TeamBoardView extends View {
     }
 
     afterRender() {
+        this.resetDragState();
+        this.initColumnReorder();
+
         if (!this.boardData.canManage) {
             return;
         }
 
         this.initDragAndDrop();
         this.initTouchDragAndDrop();
+        this.initMenuPositionFix();
     }
 
     /**
-     * Desktop drag & drop (native HTML5).
+     * The board container scrolls horizontally, so absolutely positioned
+     * dropdown menus get clipped by it. Re-position an opened card menu
+     * as fixed, relative to the viewport (flipping up when there is
+     * not enough space below).
      *
      * @private
      */
-    initDragAndDrop() {
+    initMenuPositionFix() {
         const container = this.element.querySelector('.team-board');
 
         if (!container) {
             return;
         }
 
+        container.addEventListener('click', e => {
+            const toggle = e.target.closest('.tb-menu .dropdown-toggle');
+
+            if (!toggle) {
+                return;
+            }
+
+            setTimeout(() => {
+                const group = toggle.closest('.btn-group');
+                const menu = group ? group.querySelector('.dropdown-menu') : null;
+
+                if (!group || !menu || !group.classList.contains('open')) {
+                    return;
+                }
+
+                const rect = toggle.getBoundingClientRect();
+
+                menu.style.position = 'fixed';
+                menu.style.left = 'auto';
+                menu.style.right =
+                    `${document.documentElement.clientWidth - rect.right}px`;
+                menu.style.top = `${rect.bottom + 2}px`;
+
+                const menuHeight = menu.offsetHeight;
+
+                if (rect.bottom + 2 + menuHeight > window.innerHeight) {
+                    menu.style.top = `${Math.max(8, rect.top - menuHeight - 2)}px`;
+                }
+            }, 0);
+        });
+    }
+
+    /**
+     * Desktop drag & drop of member cards (native HTML5).
+     *
+     * @private
+     */
+    initDragAndDrop() {
+        const root = this.element;
+        const container = root.querySelector('.team-board');
+
+        if (!container) {
+            return;
+        }
+
         container.addEventListener('dragstart', e => {
-            const card = e.target.closest('.tb-card');
+            const card = e.target.closest('.tb-card, .tb-sup[draggable="true"]');
 
             if (!card) {
                 return;
@@ -211,54 +344,93 @@ class TeamBoardView extends View {
             };
 
             e.dataTransfer.setData('text/plain', card.dataset.userId);
-            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.effectAllowed = 'copyMove';
 
-            setTimeout(() => card.classList.add('tb-dragging'), 0);
+            const drag = this._drag;
+
+            // Guarded: a fast or immediately-cancelled drag can finish
+            // before this timeout runs; adding the classes then would
+            // leave the board in a stuck visual state.
+            setTimeout(() => {
+                if (this._drag !== drag) {
+                    return;
+                }
+
+                card.classList.add('tb-dragging');
+                root.classList.add('tb-drag-active');
+            }, 0);
         });
 
-        container.addEventListener('dragend', e => {
-            const card = e.target.closest('.tb-card');
-
-            if (card) {
-                card.classList.remove('tb-dragging');
-            }
-
-            this._drag = null;
-            this.clearDropHighlight();
+        container.addEventListener('dragend', () => {
+            this.resetDragState();
         });
 
-        container.addEventListener('dragover', e => {
+        if (this._rootDndBound) {
+            return;
+        }
+
+        this._rootDndBound = true;
+
+        root.addEventListener('dragover', e => {
             if (!this._drag) {
                 return;
             }
 
-            const group = e.target.closest('.tb-group');
+            const target = this.dropTargetFromElement(e.target);
 
-            if (!group) {
+            e.preventDefault();
+
+            if (target) {
+                e.dataTransfer.dropEffect = (e.ctrlKey || e.altKey || e.metaKey) ? 'copy' : 'move';
+
+                this.highlightElement(target);
+
                 return;
             }
 
-            e.preventDefault();
+            // Empty area outside the columns — remove intent.
             e.dataTransfer.dropEffect = 'move';
 
-            this.highlightGroup(group);
+            this.highlightRemoveZone();
         });
 
-        container.addEventListener('drop', e => {
-            const group = e.target.closest('.tb-group');
+        root.addEventListener('drop', e => {
             const drag = this._drag;
 
-            this._drag = null;
-            this.clearDropHighlight();
+            this.resetDragState();
 
-            if (!group || !drag) {
+            if (!drag) {
                 return;
             }
 
             e.preventDefault();
 
-            this.dropTo(drag, group);
+            const target = this.dropTargetFromElement(e.target);
+
+            if (target) {
+                this.dropTo(drag, target, {
+                    add: e.ctrlKey || e.altKey || e.metaKey,
+                });
+
+                return;
+            }
+
+            this.removeMember(drag.userId, drag.fromTeamId);
         });
+    }
+
+    /**
+     * A drop target is a position group, the supervisors corner
+     * or the explicit remove zone.
+     *
+     * @private
+     */
+    dropTargetFromElement(element) {
+        if (!element || !(element instanceof Element)) {
+            return null;
+        }
+
+        return element.closest('.tb-group, .tb-sups, .tb-remove-zone');
     }
 
     /**
@@ -268,7 +440,8 @@ class TeamBoardView extends View {
      * @private
      */
     initTouchDragAndDrop() {
-        const container = this.element.querySelector('.team-board');
+        const root = this.element;
+        const container = root.querySelector('.team-board');
 
         if (!container) {
             return;
@@ -289,11 +462,12 @@ class TeamBoardView extends View {
                 touchDrag = null;
             }
 
+            root.classList.remove('tb-drag-active');
             this.clearDropHighlight();
         };
 
         container.addEventListener('touchstart', e => {
-            const card = e.target.closest('.tb-card');
+            const card = e.target.closest('.tb-card, .tb-sup[draggable="true"]');
 
             if (!card || e.touches.length !== 1) {
                 return;
@@ -318,6 +492,7 @@ class TeamBoardView extends View {
                 };
 
                 card.classList.add('tb-dragging');
+                root.classList.add('tb-drag-active');
             }, this.TOUCH_DRAG_DELAY);
         }, {passive: true});
 
@@ -345,12 +520,12 @@ class TeamBoardView extends View {
             touchDrag.ghost.style.left = `${touch.clientX + 8}px`;
             touchDrag.ghost.style.top = `${touch.clientY + 8}px`;
 
-            const group = this.groupFromPoint(touch.clientX, touch.clientY);
+            const target = this.targetFromPoint(touch.clientX, touch.clientY);
 
             this.clearDropHighlight();
 
-            if (group) {
-                this.highlightGroup(group);
+            if (target) {
+                this.highlightElement(target);
             }
         }, {passive: false});
 
@@ -363,18 +538,188 @@ class TeamBoardView extends View {
             }
 
             const touch = e.changedTouches[0];
-            const group = this.groupFromPoint(touch.clientX, touch.clientY);
+            const target = this.targetFromPoint(touch.clientX, touch.clientY);
             const drag = touchDrag;
 
             cleanup();
 
-            if (group) {
-                this.dropTo(drag, group);
+            if (target) {
+                this.dropTo(drag, target, {add: false});
             }
         };
 
         container.addEventListener('touchend', end);
         container.addEventListener('touchcancel', () => cleanup());
+    }
+
+    /**
+     * Column reordering by dragging the column header.
+     * The order is saved in user preferences.
+     *
+     * @private
+     */
+    initColumnReorder() {
+        const container = this.element.querySelector('.team-board');
+
+        if (!container) {
+            return;
+        }
+
+        container.addEventListener('dragstart', e => {
+            if (e.target.closest('.tb-card')) {
+                return;
+            }
+
+            const head = e.target.closest('.tb-col-head');
+
+            if (!head) {
+                return;
+            }
+
+            const col = head.closest('.tb-col');
+
+            this._colDrag = col;
+            this._colInsert = null;
+
+            e.dataTransfer.setData('text/plain', col.dataset.teamId);
+            e.dataTransfer.effectAllowed = 'move';
+
+            setTimeout(() => {
+                if (this._colDrag !== col) {
+                    return;
+                }
+
+                col.classList.add('tb-col-dragging');
+            }, 0);
+        });
+
+        container.addEventListener('dragover', e => {
+            const dragged = this._colDrag;
+
+            if (!dragged) {
+                return;
+            }
+
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            const over = e.target.closest('.tb-col');
+
+            if (!over || over === dragged) {
+                return;
+            }
+
+            const rect = over.getBoundingClientRect();
+
+            const horizontal =
+                getComputedStyle(container).flexDirection !== 'column';
+
+            const before = horizontal ?
+                e.clientX < rect.left + rect.width / 2 :
+                e.clientY < rect.top + rect.height / 2;
+
+            // The dragged column must not be moved in the DOM while the
+            // drag is in progress — the browser would abort the drag
+            // without a dragend. Only an insertion indicator is shown;
+            // the actual move happens on drop/dragend.
+            this.clearColumnIndicator();
+
+            over.classList.add(
+                before ? 'tb-col-insert-before' : 'tb-col-insert-after');
+
+            this._colInsert = {over: over, before: before};
+        });
+
+        const finish = () => {
+            const dragged = this._colDrag;
+            const insert = this._colInsert;
+
+            this._colDrag = null;
+            this._colInsert = null;
+
+            this.clearColumnIndicator();
+
+            if (!dragged) {
+                return;
+            }
+
+            dragged.classList.remove('tb-col-dragging');
+
+            if (insert && insert.over.parentElement === container) {
+                container.insertBefore(
+                    dragged,
+                    insert.before ? insert.over : insert.over.nextSibling
+                );
+
+                this.saveColumnOrder();
+            }
+        };
+
+        container.addEventListener('drop', e => {
+            if (this._colDrag) {
+                e.preventDefault();
+            }
+
+            finish();
+        });
+
+        container.addEventListener('dragend', () => finish());
+    }
+
+    /**
+     * @private
+     */
+    clearColumnIndicator() {
+        this.element.querySelectorAll('.tb-col-insert-before, .tb-col-insert-after')
+            .forEach(el => el.classList.remove(
+                'tb-col-insert-before', 'tb-col-insert-after'));
+    }
+
+    /**
+     * Clears all drag-related state and classes. Safe to call at any
+     * time; used as a failsafe because the browser does not deliver
+     * `dragend` when the drag source has been re-rendered (detached)
+     * in the meantime.
+     *
+     * @private
+     */
+    resetDragState() {
+        this._drag = null;
+        this._colDrag = null;
+        this._colInsert = null;
+
+        if (!this.element) {
+            return;
+        }
+
+        this.element.classList.remove('tb-drag-active');
+
+        this.element
+            .querySelectorAll(
+                '.tb-dragging, .tb-col-dragging, .tb-over, ' +
+                '.tb-col-insert-before, .tb-col-insert-after'
+            )
+            .forEach(el => el.classList.remove(
+                'tb-dragging', 'tb-col-dragging', 'tb-over',
+                'tb-col-insert-before', 'tb-col-insert-after'
+            ));
+    }
+
+    /**
+     * @private
+     */
+    saveColumnOrder() {
+        const container = this.element.querySelector('.team-board');
+
+        if (!container) {
+            return;
+        }
+
+        const order = [...container.querySelectorAll('.tb-col')]
+            .map(col => col.dataset.teamId)
+            .filter(id => !!id);
+
+        this.getPreferences().save({teamBoardOrder: order}, {patch: true});
     }
 
     /**
@@ -396,20 +741,31 @@ class TeamBoardView extends View {
     /**
      * @private
      */
-    groupFromPoint(x, y) {
+    targetFromPoint(x, y) {
         const element = document.elementFromPoint(x, y);
 
-        return element ? element.closest('.tb-group') : null;
+        return this.dropTargetFromElement(element);
     }
 
     /**
      * @private
      */
-    highlightGroup(group) {
-        if (!group.classList.contains('tb-over')) {
+    highlightElement(element) {
+        if (!element.classList.contains('tb-over')) {
             this.clearDropHighlight();
 
-            group.classList.add('tb-over');
+            element.classList.add('tb-over');
+        }
+    }
+
+    /**
+     * @private
+     */
+    highlightRemoveZone() {
+        const zone = this.element.querySelector('.tb-remove-zone');
+
+        if (zone) {
+            this.highlightElement(zone);
         }
     }
 
@@ -417,22 +773,40 @@ class TeamBoardView extends View {
      * @private
      */
     clearDropHighlight() {
-        this.element.querySelectorAll('.tb-group.tb-over')
+        this.element.querySelectorAll('.tb-over')
             .forEach(element => element.classList.remove('tb-over'));
     }
 
     /**
      * @private
      */
-    dropTo(drag, group) {
-        const toTeamId = group.dataset.teamId;
-        const position = group.dataset.position;
+    dropTo(drag, target, options) {
+        if (target.classList.contains('tb-remove-zone')) {
+            this.removeMember(drag.userId, drag.fromTeamId);
+
+            return;
+        }
+
+        const toTeamId = target.dataset.teamId;
+        const position = target.dataset.position;
+
+        if (!toTeamId || !position) {
+            return;
+        }
 
         if (drag.fromTeamId === toTeamId && drag.position === position) {
             return;
         }
 
-        this.move(drag.userId, toTeamId, drag.fromTeamId, position);
+        const add = !!(options && options.add) && drag.fromTeamId !== toTeamId;
+
+        this.move(
+            drag.userId,
+            toTeamId,
+            add ? null : drag.fromTeamId,
+            position,
+            {add: add}
+        );
     }
 
     /**
@@ -440,7 +814,7 @@ class TeamBoardView extends View {
      *
      * @private
      */
-    move(userId, teamId, fromTeamId, position) {
+    move(userId, teamId, fromTeamId, position, options) {
         Espo.Ui.notifyWait();
 
         Espo.Ajax
@@ -453,11 +827,15 @@ class TeamBoardView extends View {
             .then(data => {
                 this.boardData = data;
 
+                this.resetDragState();
+
                 const team = data.teams.find(item => item.id === teamId);
                 const member = (team ? team.members : [])
                     .find(item => item.id === userId);
 
-                const message = this.translate('moved', 'messages', 'TeamBoard')
+                const messageKey = options && options.add ? 'added' : 'moved';
+
+                const message = this.translate(messageKey, 'messages', 'TeamBoard')
                     .replace('{name}', member ? member.name : '')
                     .replace('{team}', team ? team.name : '')
                     .replace('{position}', this.translate(
@@ -474,6 +852,52 @@ class TeamBoardView extends View {
                 Espo.Ui.error(
                     this.translate('moveError', 'messages', 'TeamBoard'));
 
+                this.resetDragState();
+                this.reRender();
+            });
+    }
+
+    /**
+     * Removes a user from a team (drag-out or menu action).
+     *
+     * @private
+     */
+    removeMember(userId, teamId) {
+        if (!userId || !teamId) {
+            return;
+        }
+
+        const team = this.boardData.teams.find(item => item.id === teamId);
+        const member = (team ? team.members : []).find(item => item.id === userId);
+
+        Espo.Ui.notifyWait();
+
+        Espo.Ajax
+            .postRequest('TeamBoard/removeMember', {
+                userId: userId,
+                teamId: teamId,
+            })
+            .then(data => {
+                this.boardData = data;
+
+                this.resetDragState();
+
+                const message = this.translate('removed', 'messages', 'TeamBoard')
+                    .replace('{name}', member ? member.name : '')
+                    .replace('{team}', team ? team.name : '');
+
+                return this.reRender()
+                    .then(() => Espo.Ui.success(message));
+            })
+            .catch(xhr => {
+                if (xhr) {
+                    xhr.errorIsHandled = true;
+                }
+
+                Espo.Ui.error(
+                    this.translate('moveError', 'messages', 'TeamBoard'));
+
+                this.resetDragState();
                 this.reRender();
             });
     }

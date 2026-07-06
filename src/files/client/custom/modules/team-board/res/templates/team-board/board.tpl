@@ -5,16 +5,29 @@
         gap: 12px;
         overflow-x: auto;
         padding-bottom: 12px;
+        min-height: 200px;
     }
     .team-board .tb-col {
         flex: 0 0 auto;
         width: 288px;
         margin-bottom: 0;
     }
+    .team-board .tb-col.tb-col-dragging {
+        opacity: 0.5;
+    }
+    .team-board .tb-col.tb-col-insert-before {
+        box-shadow: -4px 0 0 0 #337ab7;
+    }
+    .team-board .tb-col.tb-col-insert-after {
+        box-shadow: 4px 0 0 0 #337ab7;
+    }
     .team-board .tb-col-head {
         display: flex;
         align-items: center;
         gap: 8px;
+    }
+    .team-board .tb-col-head[draggable="true"] {
+        cursor: grab;
     }
     .team-board .tb-team-name {
         font-weight: 600;
@@ -23,9 +36,56 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+    .team-board .tb-team-name a {
+        color: inherit;
+    }
     .team-board .tb-count {
         opacity: 0.7;
         font-size: 85%;
+    }
+    .tb-total {
+        display: inline-block;
+        font-size: 55%;
+        font-weight: 600;
+        vertical-align: middle;
+        border: 1px solid;
+        opacity: 0.6;
+        border-radius: 10px;
+        padding: 1px 9px;
+        margin-left: 8px;
+        cursor: default;
+    }
+    .team-board .tb-sups {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        min-width: 24px;
+        min-height: 24px;
+        justify-content: flex-end;
+        border-radius: 12px;
+        padding: 1px;
+    }
+    .team-board .tb-sup {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 1px dashed;
+        opacity: 0.75;
+        overflow: hidden;
+    }
+    .team-board .tb-sup[draggable="true"] {
+        cursor: grab;
+    }
+    .team-board .tb-sup.tb-dragging {
+        opacity: 0.4;
+    }
+    .team-board .tb-sup img {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
     }
     .team-board .tb-chev {
         display: none;
@@ -39,9 +99,20 @@
         padding: 2px 4px 4px;
         margin-bottom: 6px;
     }
-    .team-board .tb-group.tb-over {
-        outline: 2px dashed;
+    .team-board .tb-group.tb-over,
+    .team-board .tb-sups.tb-over {
+        outline: 2px dashed #337ab7;
         outline-offset: -1px;
+    }
+    .team-board .tb-group-vice {
+        margin-left: 12px;
+        border-left: 2px solid rgba(128, 128, 128, 0.25);
+        padding-left: 8px;
+    }
+    .team-board .tb-group-member {
+        margin-left: 24px;
+        border-left: 2px solid rgba(128, 128, 128, 0.25);
+        padding-left: 8px;
     }
     .team-board .tb-group-label {
         font-size: 11px;
@@ -63,8 +134,8 @@
     .team-board .tb-card.tb-dragging {
         opacity: 0.4;
     }
-    .team-board .tb-group-supervisor .tb-card {
-        opacity: 0.65;
+    .team-board .tb-lead {
+        border-left: 3px solid #337ab7;
     }
     .team-board .tb-lead .tb-name {
         font-weight: 600;
@@ -82,6 +153,9 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+    .team-board .tb-name a {
+        color: inherit;
+    }
     .team-board .tb-menu > .btn {
         padding: 2px 6px;
     }
@@ -91,6 +165,30 @@
         opacity: 0.5;
         text-align: center;
         padding: 8px;
+    }
+    .tb-remove-zone {
+        display: none;
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        transform: translateX(-50%);
+        z-index: 1500;
+        align-items: center;
+        gap: 8px;
+        border: 2px dashed #cf605d;
+        border-radius: 6px;
+        color: #cf605d;
+        background: rgba(255, 255, 255, 0.92);
+        padding: 12px 24px;
+        font-weight: 600;
+        pointer-events: auto;
+    }
+    .tb-drag-active .tb-remove-zone {
+        display: flex;
+    }
+    .tb-remove-zone.tb-over {
+        background: #cf605d;
+        color: #fff;
     }
     .tb-ghost {
         position: fixed;
@@ -122,7 +220,10 @@
     }
 </style>
 
-<div class="page-header"><h3>{{title}}</h3></div>
+<div class="page-header"><h3>{{title}}<span
+    class="tb-total"
+    title="{{uniqueLabel}}"
+>{{totalUnique}}</span></h3></div>
 
 {{#if noTeams}}
     <p class="text-muted">{{noTeamsLabel}}</p>
@@ -131,9 +232,25 @@
 <div class="team-board">
     {{#each teams}}
     <div class="tb-col panel panel-default" data-team-id="{{id}}">
-        <div class="panel-heading tb-col-head" data-action="toggleColumn">
-            <span class="tb-team-name">{{name}}</span>
+        <div class="panel-heading tb-col-head" data-action="toggleColumn" draggable="true">
+            <span class="tb-team-name"><a
+                href="#Team/view/{{id}}"
+                draggable="false"
+            >{{name}}</a></span>
             <span class="tb-count">{{count}}</span>
+            <div class="tb-sups" data-team-id="{{id}}" data-position="Supervisor">
+                {{#each supervisors}}
+                <a
+                    href="#User/view/{{id}}"
+                    class="tb-sup"
+                    {{#if canDrag}}draggable="true"{{else}}draggable="false"{{/if}}
+                    data-user-id="{{id}}"
+                    data-team-id="{{teamId}}"
+                    data-position="Supervisor"
+                    title="{{tooltip}}"
+                >{{{avatarHtml}}}</a>
+                {{/each}}
+            </div>
             <span class="tb-chev fas fa-chevron-down"></span>
         </div>
         <div class="tb-col-body">
@@ -150,7 +267,10 @@
                 >
                     <div class="tb-avatar">{{{avatarHtml}}}</div>
                     <div class="tb-info">
-                        <div class="tb-name">{{name}}</div>
+                        <div class="tb-name"><a
+                            href="#User/view/{{id}}"
+                            draggable="false"
+                        >{{name}}</a></div>
                         <div class="tb-pos text-muted small">{{positionLabel}}</div>
                     </div>
                     {{#if canManage}}
@@ -181,9 +301,29 @@
                                 data-user-id="{{userId}}"
                                 data-to-team-id="{{toTeamId}}"
                                 data-from-team-id="{{fromTeamId}}"
-                            >{{label}}</a></li>
+                            >→ {{label}}</a></li>
                             {{/each}}
                             {{/if}}
+                            {{#if hasMenuAddTeams}}
+                            <li class="divider"></li>
+                            {{#each menuAddTeams}}
+                            <li><a
+                                role="button"
+                                tabindex="0"
+                                data-action="addToTeam"
+                                data-user-id="{{userId}}"
+                                data-to-team-id="{{toTeamId}}"
+                            >+ {{label}}</a></li>
+                            {{/each}}
+                            {{/if}}
+                            <li class="divider"></li>
+                            <li><a
+                                role="button"
+                                tabindex="0"
+                                data-action="removeFromTeam"
+                                data-user-id="{{id}}"
+                                data-team-id="{{teamId}}"
+                            >{{removeLabel}}</a></li>
                         </ul>
                     </div>
                     {{/if}}
@@ -198,3 +338,10 @@
     </div>
     {{/each}}
 </div>
+
+{{#if canManage}}
+<div class="tb-remove-zone">
+    <span class="fas fa-user-minus"></span>
+    <span>{{removeDropLabel}}</span>
+</div>
+{{/if}}

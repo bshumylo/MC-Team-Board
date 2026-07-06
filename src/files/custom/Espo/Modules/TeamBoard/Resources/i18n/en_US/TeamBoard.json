@@ -6,7 +6,11 @@
         "Drop here": "Drop here",
         "No teams": "No teams available.",
         "Set position": "Set position",
-        "Move to team": "Move to team"
+        "Move to team": "Move to team",
+        "Add to team": "Add to team",
+        "Remove from team": "Remove from team",
+        "Drop here to remove": "Drop here to remove from the team",
+        "Unique members": "Unique members across all teams"
     },
     "positions": {
         "Supervisor": "Supervisor",
@@ -16,6 +20,8 @@
     },
     "messages": {
         "moved": "{name} → {team} · {position}",
+        "added": "{name} + {team} · {position}",
+        "removed": "{name} removed from {team}",
         "moveError": "Could not save the change."
     }
 }

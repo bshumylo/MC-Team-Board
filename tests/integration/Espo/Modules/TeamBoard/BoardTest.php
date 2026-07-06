@@ -237,4 +237,64 @@ class BoardTest extends BaseTestCase
 
         $this->assertFalse($data->canManage);
     }
+
+    public function testRemoveMember(): void
+    {
+        $em = $this->getEntityManager();
+
+        $team = $this->createTeam('Team H');
+        $user = $this->createMember('member.h');
+
+        $em->getRelation($team, 'users')->relate($user, ['role' => Position::MEMBER]);
+
+        $this->createService()->removeMember($user->getId(), $team->getId());
+
+        $this->assertNull(
+            $this->getRole($team, $user),
+            'User is removed from the team.'
+        );
+    }
+
+    public function testAddToSecondTeamKeepsFirstMembership(): void
+    {
+        $em = $this->getEntityManager();
+
+        $teamA = $this->createTeam('Team I');
+        $teamB = $this->createTeam('Team J');
+        $user = $this->createMember('member.i');
+
+        $em->getRelation($teamA, 'users')->relate($user, ['role' => Position::LEADER]);
+
+        // fromTeamId = null → add, not move.
+        $this->createService()->move(
+            $user->getId(),
+            $teamB->getId(),
+            null,
+            Position::MEMBER
+        );
+
+        $this->assertSame(
+            Position::LEADER,
+            $this->getRole($teamA, $user),
+            'Membership and position in the first team are kept.'
+        );
+
+        $this->assertSame(Position::MEMBER, $this->getRole($teamB, $user));
+    }
+
+    public function testTotalUniqueCountsUserOnce(): void
+    {
+        $em = $this->getEntityManager();
+
+        $teamA = $this->createTeam('Team K');
+        $teamB = $this->createTeam('Team L');
+        $user = $this->createMember('member.k');
+
+        $em->getRelation($teamA, 'users')->relate($user, ['role' => Position::MEMBER]);
+        $em->getRelation($teamB, 'users')->relate($user, ['role' => Position::MEMBER]);
+
+        $data = $this->createService()->getData();
+
+        $this->assertSame(1, $data->totalUnique);
+    }
 }

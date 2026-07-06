@@ -6,7 +6,11 @@
         "Drop here": "Перетягніть сюди",
         "No teams": "Немає доступних команд.",
         "Set position": "Змінити позицію",
-        "Move to team": "Перемістити в команду"
+        "Move to team": "Перемістити в команду",
+        "Add to team": "Додати в команду",
+        "Remove from team": "Прибрати з команди",
+        "Drop here to remove": "Перетягніть сюди, щоб прибрати з команди",
+        "Unique members": "Унікальних людей в усіх командах"
     },
     "positions": {
         "Supervisor": "Супервізор",
@@ -16,6 +20,8 @@
     },
     "messages": {
         "moved": "{name} → {team} · {position}",
+        "added": "{name} + {team} · {position}",
+        "removed": "{name} прибрано з команди {team}",
         "moveError": "Не вдалося зберегти зміну."
     }
 }

@@ -80,6 +80,7 @@ class Service
             'positionList' => Position::LIST,
             'canManage' => $this->user->isAdmin() ||
                 $this->acl->checkScope(User::ENTITY_TYPE, Table::ACTION_EDIT),
+            'totalUnique' => count($userMap),
             'teams' => $teamList,
         ];
     }
@@ -148,6 +149,36 @@ class Service
                         ->unrelate($user);
                 }
             });
+
+        return $this->getData();
+    }
+
+    /**
+     * Remove a user from a team (drag-out on the board).
+     * Returns fresh board data.
+     *
+     * @throws Forbidden
+     */
+    public function removeMember(string $userId, string $teamId): stdClass
+    {
+        if (!$this->acl->check(self::SCOPE)) {
+            throw new Forbidden("No access to Team Board.");
+        }
+
+        $user = $this->entityProvider->getByClass(User::class, $userId);
+        $team = $this->entityProvider->getByClass(Team::class, $teamId);
+
+        if (!$this->acl->checkEntityEdit($user)) {
+            throw new Forbidden("No edit access to user.");
+        }
+
+        if (!$this->acl->checkEntityRead($team)) {
+            throw new Forbidden("No access to team.");
+        }
+
+        $this->entityManager
+            ->getRelation($team, 'users')
+            ->unrelate($user);
 
         return $this->getData();
     }
