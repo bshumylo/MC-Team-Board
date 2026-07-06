@@ -1,0 +1,4 @@
+{
+    "controller": "team-board:controllers/team-board",
+    "iconClass": "fas fa-columns"
+}

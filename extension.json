@@ -1,0 +1,14 @@
+{
+    "module": "TeamBoard",
+    "name": "Team Board",
+    "description": "Kanban-style board of teams with member positions and drag-and-drop management.",
+    "author": "Bogdan Shumylo",
+    "bundled": true,
+    "acceptableVersions": [
+        ">=9.3.0"
+    ],
+    "php": [
+        ">=8.3"
+    ],
+    "scripts": []
+}

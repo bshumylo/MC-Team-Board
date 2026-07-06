@@ -1,0 +1,6 @@
+{
+  "scriptList": [
+    "__APPEND__",
+    "client/custom/modules/team-board/lib/init.js"
+  ]
+}

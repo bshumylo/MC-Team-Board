@@ -1,0 +1,12 @@
+[
+    {
+        "route": "/TeamBoard/data",
+        "method": "get",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\GetData"
+    },
+    {
+        "route": "/TeamBoard/move",
+        "method": "post",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostMove"
+    }
+]

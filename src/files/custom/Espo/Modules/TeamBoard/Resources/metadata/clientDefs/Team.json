@@ -1,0 +1,16 @@
+{
+    "menu": {
+        "list": {
+            "buttons": [
+                "__APPEND__",
+                {
+                    "name": "teamBoard",
+                    "labelTranslation": "Global.scopeNames.TeamBoard",
+                    "link": "#TeamBoard",
+                    "acl": "read",
+                    "aclScope": "TeamBoard"
+                }
+            ]
+        }
+    }
+}

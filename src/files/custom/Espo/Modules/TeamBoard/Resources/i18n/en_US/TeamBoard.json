@@ -1,0 +1,21 @@
+{
+    "labels": {
+        "Team Board": "Team Board",
+        "Members": "Members",
+        "Supervisors": "Supervisors",
+        "Drop here": "Drop here",
+        "No teams": "No teams available.",
+        "Set position": "Set position",
+        "Move to team": "Move to team"
+    },
+    "positions": {
+        "Supervisor": "Supervisor",
+        "Leader": "Leader",
+        "Vice Leader": "Vice Leader",
+        "Member": "Member"
+    },
+    "messages": {
+        "moved": "{name} → {team} · {position}",
+        "moveError": "Could not save the change."
+    }
+}
