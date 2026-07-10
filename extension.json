@@ -1,6 +1,6 @@
 {
     "module": "TeamBoard",
-    "name": "Team Board",
+    "name": "MC Team Board",
     "description": "Kanban-style board of teams with member positions and drag-and-drop management.",
     "author": "bshumylo",
     "bundled": true,
