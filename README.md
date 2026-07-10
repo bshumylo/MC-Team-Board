@@ -1,4 +1,4 @@
-# Team Board — розширення для EspoCRM
+# MC Team Board
 <img width="1280" height="640" alt="cover" src="https://github.com/user-attachments/assets/446904c1-e77b-4b58-92b5-f4a1907b09e9" />
 
 Kanban-дошка команд: колонки — команди (Teams), картки — учасники, згруповані за
