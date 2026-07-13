@@ -2,7 +2,8 @@
 
 **English** · [Українська](README.uk.md)
 
-<img width="1280" height="640" alt="cover" src="https://github.com/user-attachments/assets/446904c1-e77b-4b58-92b5-f4a1907b09e9" />
+<img width="1280" height="640" alt="preview-en" src="https://github.com/user-attachments/assets/df68de7c-789c-4897-99d4-5952eebce113" />
+
 
 A Kanban board of teams: columns are Teams, cards are members grouped by their
 position within the team. The position list is dynamic — it is taken from each
