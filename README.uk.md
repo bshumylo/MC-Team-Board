@@ -2,7 +2,7 @@
 
 [English](README.md) · **Українська**
 
-<img width="1280" height="640" alt="cover" src="https://github.com/user-attachments/assets/446904c1-e77b-4b58-92b5-f4a1907b09e9" />
+<img width="1280" height="640" alt="preview-uk" src="https://github.com/user-attachments/assets/d6026340-fbfb-4edf-a7cb-221bd7a84921" />
 
 Kanban-дошка команд: колонки — команди (Teams), картки — учасники, згруповані за
 позицією в команді. Список позицій — динамічний: береться з поля `positionList`
