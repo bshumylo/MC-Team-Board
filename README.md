@@ -122,4 +122,29 @@ npm run integration-tests
 | Колонки = команди, картки за динамічним списком позицій | `board.tpl`, `views/team-board/board.js` | вручну в UI; `BoardTest::testGetDataReturnsTeamsAndMembers` |
 | Динамічний список позицій із `Team.positionList` | `Tools/Board/Position::listFor()`, `Service.php` | `PositionTest`, вручну в UI |
 | Supervisor окремо, аватарами в куті заголовка | `board.tpl` (`tb-sups`), лише за наявності позиції Supervisor | вручну в UI |
-| Видимість позицій per-us
+| Видимість позицій per-user | `togglePositionVisibility()`, Preferences `teamBoardHiddenPositions` | вручну в UI |
+| Особистий порядок карток per-user | DnD у групі, Preferences `teamBoardMemberOrder` | вручну в UI |
+| Додавання користувача без команди | меню «+», `Service::findFreeUsers()` (з User ACL) | вручну в UI |
+| Position у зв'язку User↔Team, не в User | колонка `role` зв'язку `team_user`; `Tools/Board/Service.php` | `testSupervisorInMultipleTeams` |
+| Role ≠ Position | позиції не читають і не пишуть ACL-ролі | code review: `Service.php` не звертається до Roles |
+| DnD між колонками = зміна команди | `initDragAndDrop`/`initTouchDragAndDrop` → `POST TeamBoard/move` | `testMoveBetweenTeams` |
+| DnD в межах колонки = зміна Position | drop у групу тієї ж команди | `testMoveChangesPositionWithinTeam` |
+| Збереження одразу + toast/помилка | `move()` → `Espo.Ui.success` / `Espo.Ui.error` | вручну в UI |
+| Кнопка біля Create Team | `clientDefs/Team.json` → `menu.list.buttons` | вручну в UI |
+| Пункт бокового меню через стандартні налаштування | `scopes/TeamBoard.json` → `"tab": true` | вручну: Admin → User Interface |
+| Доступ через стандартний ACL | scope `TeamBoard` (`"acl": "boolean"`) + фільтрація Team/User ACL у сервісі | `testNoAccessWithoutAclScope`, `testAccessWithAclScope` |
+| Ексклюзивна лише top-позиція, попередній → bottom | `Service::demoteOthers()`, `Position::topOf()`/`bottomOf()` | `testPromotingLeaderDemotesPreviousLeader` |
+| Валідація позиції | `Service::move()` | `testBadPositionIsRejected` |
+| Адаптивність (desktop скрол / mobile стек + touch DnD) | media query в `board.tpl`, touch-логіка у view | вручну на пристрої |
+| Нативний UI EspoCRM | panel-класи теми, `Espo.Ui`, аватари EspoCRM, без сторонніх бібліотек | вручну в UI |
+
+## Сумісність версій
+
+`acceptableVersions: ">=9.3.0"`. Протестовано наживо на
+[EspoCRM 10.0.0](https://github.com/espocrm/espocrm/releases/tag/10.0.0).
+Використані конвенції (ESM frontend, `Api\Action` backend) актуальні для
+гілок 9.3+ і 10.x.
+
+## Ліцензія
+
+GNU General Public License v3 — див. [LICENSE](LICENSE).

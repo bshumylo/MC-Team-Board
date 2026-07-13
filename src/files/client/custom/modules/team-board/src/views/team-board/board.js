@@ -1339,4 +1339,23 @@ class TeamBoardView extends View {
 
                 const message = this.translate('removed', 'messages', 'TeamBoard')
                     .replace('{name}', member ? member.name : '')
-                    .replace('{team}', team ? t
+                    .replace('{team}', team ? team.name : '');
+
+                return this.reRender()
+                    .then(() => Espo.Ui.success(message));
+            })
+            .catch(xhr => {
+                if (xhr) {
+                    xhr.errorIsHandled = true;
+                }
+
+                Espo.Ui.error(
+                    this.translate('moveError', 'messages', 'TeamBoard'));
+
+                this.resetDragState();
+                this.reRender();
+            });
+    }
+}
+
+export default TeamBoardView;
