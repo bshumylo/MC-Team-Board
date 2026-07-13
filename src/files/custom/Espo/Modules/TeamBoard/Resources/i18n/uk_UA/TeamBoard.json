@@ -10,7 +10,10 @@
         "Add to team": "Додати в команду",
         "Remove from team": "Прибрати з команди",
         "Drop here to remove": "Перетягніть сюди, щоб прибрати з команди",
-        "Unique members": "Унікальних людей в усіх командах"
+        "Unique members": "Унікальних людей в усіх командах",
+        "Visible positions": "Відображати позиції",
+        "Add member": "Додати користувача без команди",
+        "No users without a team": "Немає користувачів без команди"
     },
     "positions": {
         "Supervisor": "Супервізор",

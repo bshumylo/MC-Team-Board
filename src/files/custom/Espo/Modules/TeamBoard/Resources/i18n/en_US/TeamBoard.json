@@ -10,7 +10,10 @@
         "Add to team": "Add to team",
         "Remove from team": "Remove from team",
         "Drop here to remove": "Drop here to remove from the team",
-        "Unique members": "Unique members across all teams"
+        "Unique members": "Unique members across all teams",
+        "Visible positions": "Visible positions",
+        "Add member": "Add a user without a team",
+        "No users without a team": "No users without a team"
     },
     "positions": {
         "Supervisor": "Supervisor",

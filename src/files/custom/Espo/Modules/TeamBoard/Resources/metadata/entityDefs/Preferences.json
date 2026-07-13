@@ -6,6 +6,20 @@
             "layoutMassUpdateDisabled": true,
             "customizationDisabled": true,
             "utility": true
+        },
+        "teamBoardMemberOrder": {
+            "type": "jsonObject",
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "customizationDisabled": true,
+            "utility": true
+        },
+        "teamBoardHiddenPositions": {
+            "type": "jsonObject",
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "customizationDisabled": true,
+            "utility": true
         }
     }
 }

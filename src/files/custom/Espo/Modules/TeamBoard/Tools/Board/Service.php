@@ -47,6 +47,9 @@ class Service
 
         $userMap = $this->findUsers($positionMap);
 
+        $canManage = $this->user->isAdmin() ||
+            $this->acl->checkScope(User::ENTITY_TYPE, Table::ACTION_EDIT);
+
         $teamList = [];
 
         foreach ($teams as $team) {
@@ -72,16 +75,17 @@ class Service
             $teamList[] = (object) [
                 'id' => $team->getId(),
                 'name' => $team->get('name'),
+                'positionList' => Position::listFor($team->get('positionList')),
                 'members' => $members,
             ];
         }
 
         return (object) [
-            'positionList' => Position::LIST,
-            'canManage' => $this->user->isAdmin() ||
-                $this->acl->checkScope(User::ENTITY_TYPE, Table::ACTION_EDIT),
+            'positionList' => Position::DEFAULT_LIST,
+            'canManage' => $canManage,
             'totalUnique' => count($userMap),
             'teams' => $teamList,
+            'freeUsers' => $canManage ? $this->findFreeUsers() : [],
         ];
     }
 
@@ -103,12 +107,14 @@ class Service
             throw new Forbidden("No access to Team Board.");
         }
 
-        if (!in_array($position, Position::LIST, true)) {
-            throw new BadRequest("Not allowed position.");
-        }
-
         $user = $this->entityProvider->getByClass(User::class, $userId);
         $team = $this->entityProvider->getByClass(Team::class, $teamId);
+
+        $positionList = Position::listFor($team->get('positionList'));
+
+        if (!in_array($position, $positionList, true)) {
+            throw new BadRequest("Not allowed position.");
+        }
 
         $fromTeam = null;
 
@@ -129,7 +135,7 @@ class Service
 
         $this->entityManager
             ->getTransactionManager()
-            ->run(function () use ($user, $team, $fromTeam, $position): void {
+            ->run(function () use ($user, $team, $fromTeam, $position, $positionList): void {
                 $relation = $this->entityManager->getRelation($team, 'users');
 
                 if ($relation->isRelated($user)) {
@@ -139,8 +145,14 @@ class Service
                     $relation->relate($user, ['role' => $position]);
                 }
 
-                if (in_array($position, Position::EXCLUSIVE_LIST, true)) {
-                    $this->demoteOthers($team->getId(), $user->getId(), $position);
+                // Only the top position is exclusive (one user per team).
+                if ($position === Position::topOf($positionList)) {
+                    $this->demoteOthers(
+                        $team->getId(),
+                        $user->getId(),
+                        $position,
+                        Position::bottomOf($positionList)
+                    );
                 }
 
                 if ($fromTeam) {
@@ -155,6 +167,10 @@ class Service
 
     /**
      * Remove a user from a team (drag-out on the board).
+     *
+     * Only unlinks the user from the team. The user record itself
+     * is never deleted.
+     *
      * Returns fresh board data.
      *
      * @throws Forbidden
@@ -298,16 +314,86 @@ class Service
     }
 
     /**
-     * Only one user per team can hold an exclusive position (Leader, Vice Leader).
-     * Demotes other holders to Member.
+     * Active users that are not members of any team,
+     * filtered by the User ACL of the requesting user.
+     *
+     * @return stdClass[]
      */
-    private function demoteOthers(string $teamId, string $userId, string $position): void
+    private function findFreeUsers(): array
     {
+        $query = $this->entityManager
+            ->getQueryBuilder()
+            ->select()
+            ->from(self::TEAM_USER_ENTITY)
+            ->select(['userId'])
+            ->where(['deleted' => false])
+            ->distinct()
+            ->build();
+
+        $sth = $this->entityManager
+            ->getQueryExecutor()
+            ->execute($query);
+
+        $memberIds = array_column($sth->fetchAll(PDO::FETCH_ASSOC), 'userId');
+
+        try {
+            $builder = $this->selectBuilderFactory
+                ->create()
+                ->from(User::ENTITY_TYPE)
+                ->withStrictAccessControl()
+                ->buildQueryBuilder()
+                ->where([
+                    'isActive' => true,
+                    'type' => [User::TYPE_REGULAR, User::TYPE_ADMIN],
+                ])
+                ->order('name');
+
+            if ($memberIds !== []) {
+                $builder->where(['id!=' => $memberIds]);
+            }
+
+            $query = $builder->build();
+        }
+        catch (Forbidden) {
+            return [];
+        }
+
+        $collection = $this->entityManager
+            ->getRDBRepositoryByClass(User::class)
+            ->clone($query)
+            ->find();
+
+        $list = [];
+
+        foreach ($collection as $user) {
+            $list[] = (object) [
+                'id' => $user->getId(),
+                'name' => $user->getName() ?? $user->getUserName(),
+                'userName' => $user->getUserName(),
+                'avatarId' => $user->get('avatarId'),
+                'avatarColor' => $user->get('avatarColor'),
+            ];
+        }
+
+        return $list;
+    }
+
+    /**
+     * Only one user per team can hold the top position.
+     * Demotes other holders to the bottom position of the team.
+     */
+    private function demoteOthers(
+        string $teamId,
+        string $userId,
+        string $position,
+        string $demoteTo
+    ): void {
+
         $query = $this->entityManager
             ->getQueryBuilder()
             ->update()
             ->in(self::TEAM_USER_ENTITY)
-            ->set(['role' => Position::MEMBER])
+            ->set(['role' => $demoteTo])
             ->where([
                 'teamId' => $teamId,
                 'role' => $position,

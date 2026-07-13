@@ -73,7 +73,7 @@ class BoardTest extends BaseTestCase
 
         $data = $this->createService()->getData();
 
-        $this->assertSame(Position::LIST, $data->positionList);
+        $this->assertSame(Position::DEFAULT_LIST, $data->positionList);
 
         $teamItem = null;
 
@@ -86,6 +86,112 @@ class BoardTest extends BaseTestCase
         $this->assertNotNull($teamItem, 'Team is present on the board.');
         $this->assertCount(1, $teamItem->members);
         $this->assertSame(Position::LEADER, $teamItem->members[0]->position);
+
+        $this->assertSame(
+            Position::DEFAULT_LIST,
+            $teamItem->positionList,
+            'A team without an own position list gets the default one.'
+        );
+    }
+
+    public function testCustomPositionList(): void
+    {
+        $em = $this->getEntityManager();
+
+        /** @var Team $team */
+        $team = $em->createEntity(Team::ENTITY_TYPE, [
+            'name' => 'Team Custom',
+            'positionList' => ['Chief', 'Deputy', 'Agent'],
+        ]);
+
+        $chief = $this->createMember('custom.chief');
+        $newChief = $this->createMember('custom.new-chief');
+
+        $em->getRelation($team, 'users')->relate($chief, ['role' => 'Chief']);
+        $em->getRelation($team, 'users')->relate($newChief, ['role' => 'Agent']);
+
+        $service = $this->createService();
+
+        $data = $service->move(
+            $newChief->getId(),
+            $team->getId(),
+            $team->getId(),
+            'Chief'
+        );
+
+        $this->assertSame('Chief', $this->getRole($team, $newChief));
+
+        $this->assertSame(
+            'Agent',
+            $this->getRole($team, $chief),
+            'The previous top-position holder is demoted to the bottom position.'
+        );
+
+        $teamItem = null;
+
+        foreach ($data->teams as $item) {
+            if ($item->id === $team->getId()) {
+                $teamItem = $item;
+            }
+        }
+
+        $this->assertNotNull($teamItem);
+        $this->assertSame(['Chief', 'Deputy', 'Agent'], $teamItem->positionList);
+
+        // A position from the default list is not allowed for this team.
+        $this->expectException(\Espo\Core\Exceptions\BadRequest::class);
+
+        $service->move(
+            $newChief->getId(),
+            $team->getId(),
+            $team->getId(),
+            Position::LEADER
+        );
+    }
+
+    public function testNonTopPositionIsNotExclusive(): void
+    {
+        $em = $this->getEntityManager();
+
+        $team = $this->createTeam('Team Vices');
+        $viceA = $this->createMember('vice.a');
+        $viceB = $this->createMember('vice.b');
+
+        $em->getRelation($team, 'users')->relate($viceA, ['role' => Position::VICE_LEADER]);
+        $em->getRelation($team, 'users')->relate($viceB, ['role' => Position::MEMBER]);
+
+        $this->createService()->move(
+            $viceB->getId(),
+            $team->getId(),
+            $team->getId(),
+            Position::VICE_LEADER
+        );
+
+        $this->assertSame(Position::VICE_LEADER, $this->getRole($team, $viceB));
+
+        $this->assertSame(
+            Position::VICE_LEADER,
+            $this->getRole($team, $viceA),
+            'A non-top position can be held by multiple users.'
+        );
+    }
+
+    public function testFreeUsers(): void
+    {
+        $em = $this->getEntityManager();
+
+        $team = $this->createTeam('Team Free');
+        $inTeam = $this->createMember('free.in-team');
+        $free = $this->createMember('free.solo');
+
+        $em->getRelation($team, 'users')->relate($inTeam, ['role' => Position::MEMBER]);
+
+        $data = $this->createService()->getData();
+
+        $freeIds = array_map(fn ($item) => $item->id, $data->freeUsers);
+
+        $this->assertContains($free->getId(), $freeIds);
+        $this->assertNotContains($inTeam->getId(), $freeIds);
     }
 
     public function testMoveBetweenTeams(): void
@@ -252,6 +358,13 @@ class BoardTest extends BaseTestCase
         $this->assertNull(
             $this->getRole($team, $user),
             'User is removed from the team.'
+        );
+
+        $freshUser = $em->getEntityById(User::ENTITY_TYPE, $user->getId());
+
+        $this->assertNotNull(
+            $freshUser,
+            'The user record itself is not deleted — only the team membership.'
         );
     }
 

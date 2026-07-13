@@ -24,14 +24,21 @@
     .team-board .tb-col-head {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
     }
     .team-board .tb-col-head[draggable="true"] {
         cursor: grab;
     }
+    .team-board .tb-title {
+        flex: 1;
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        min-width: 0;
+    }
     .team-board .tb-team-name {
         font-weight: 600;
-        flex: 1;
+        flex: 0 1 auto;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -40,6 +47,7 @@
         color: inherit;
     }
     .team-board .tb-count {
+        flex: 0 0 auto;
         opacity: 0.7;
         font-size: 85%;
     }
@@ -72,9 +80,13 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        border: 1px dashed;
         opacity: 0.75;
         overflow: hidden;
+    }
+    .team-board .tb-sup-empty {
+        border: 1px dashed;
+        opacity: 0.45;
+        cursor: default;
     }
     .team-board .tb-sup[draggable="true"] {
         cursor: grab;
@@ -91,6 +103,21 @@
         display: none;
         opacity: 0.5;
     }
+    .team-board .tb-col-menu > .btn {
+        padding: 2px 5px;
+        opacity: 0.6;
+    }
+    .team-board .tb-col-menu > .btn:hover {
+        opacity: 1;
+    }
+    .team-board .tb-col-menu .dropdown-menu {
+        max-height: 320px;
+        overflow-y: auto;
+    }
+    .team-board .tb-check {
+        width: 14px;
+        display: inline-block;
+    }
     .team-board .tb-col-body {
         padding: 8px;
     }
@@ -104,15 +131,8 @@
         outline: 2px dashed #337ab7;
         outline-offset: -1px;
     }
-    .team-board .tb-group-vice {
-        margin-left: 12px;
-        border-left: 2px solid rgba(128, 128, 128, 0.25);
-        padding-left: 8px;
-    }
-    .team-board .tb-group-member {
-        margin-left: 24px;
-        border-left: 2px solid rgba(128, 128, 128, 0.25);
-        padding-left: 8px;
+    .team-board .tb-hidden {
+        display: none !important;
     }
     .team-board .tb-group-label {
         font-size: 11px;
@@ -133,6 +153,12 @@
     }
     .team-board .tb-card.tb-dragging {
         opacity: 0.4;
+    }
+    .team-board .tb-card.tb-card-insert-before {
+        box-shadow: 0 -3px 0 0 #337ab7;
+    }
+    .team-board .tb-card.tb-card-insert-after {
+        box-shadow: 0 3px 0 0 #337ab7;
     }
     .team-board .tb-lead {
         border-left: 3px solid #337ab7;
@@ -197,6 +223,18 @@
         opacity: 0.9;
         margin: 0;
     }
+    .tb-hscroll {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        height: 14px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        z-index: 1200;
+    }
+    .tb-hscroll > div {
+        height: 1px;
+    }
     @media (max-width: 768px) {
         .team-board {
             flex-direction: column;
@@ -233,12 +271,19 @@
     {{#each teams}}
     <div class="tb-col panel panel-default" data-team-id="{{id}}">
         <div class="panel-heading tb-col-head" data-action="toggleColumn" draggable="true">
-            <span class="tb-team-name"><a
-                href="#Team/view/{{id}}"
-                draggable="false"
-            >{{name}}</a></span>
-            <span class="tb-count">{{count}}</span>
-            <div class="tb-sups" data-team-id="{{id}}" data-position="Supervisor">
+            <div class="tb-title">
+                <span class="tb-team-name"><a
+                    href="#Team/view/{{id}}"
+                    draggable="false"
+                >{{name}}</a></span>
+                <span class="tb-count">{{count}}</span>
+            </div>
+            {{#if hasSupervisorPosition}}
+            <div
+                class="tb-sups{{#if supervisorsHidden}} tb-hidden{{/if}}"
+                data-team-id="{{id}}"
+                data-position="Supervisor"
+            >
                 {{#each supervisors}}
                 <a
                     href="#User/view/{{id}}"
@@ -250,16 +295,72 @@
                     title="{{tooltip}}"
                 >{{{avatarHtml}}}</a>
                 {{/each}}
+                {{#unless hasSupervisors}}
+                <span class="tb-sup tb-sup-empty"></span>
+                {{/unless}}
+            </div>
+            {{/if}}
+            {{#if ../canManage}}
+            <div class="btn-group tb-col-menu">
+                <button
+                    type="button"
+                    class="btn btn-link btn-sm dropdown-toggle"
+                    data-toggle="dropdown"
+                    title="{{../addMemberLabel}}"
+                ><span class="fas fa-user-plus"></span></button>
+                <ul class="dropdown-menu pull-right">
+                    {{#if hasFreeUsers}}
+                    {{#each freeUsers}}
+                    <li><a
+                        role="button"
+                        tabindex="0"
+                        data-action="addFreeUser"
+                        data-user-id="{{id}}"
+                        data-team-id="{{teamId}}"
+                        data-position="{{position}}"
+                    >{{name}}</a></li>
+                    {{/each}}
+                    {{else}}
+                    <li class="disabled"><a>{{../noFreeUsersLabel}}</a></li>
+                    {{/if}}
+                </ul>
+            </div>
+            {{/if}}
+            <div class="btn-group tb-col-menu">
+                <button
+                    type="button"
+                    class="btn btn-link btn-sm dropdown-toggle"
+                    data-toggle="dropdown"
+                    title="{{../settingsLabel}}"
+                ><span class="fas fa-ellipsis-v"></span></button>
+                <ul class="dropdown-menu pull-right">
+                    <li class="dropdown-header">{{../settingsLabel}}</li>
+                    {{#each settingsPositions}}
+                    <li><a
+                        role="button"
+                        tabindex="0"
+                        data-action="togglePosition"
+                        data-team-id="{{teamId}}"
+                        data-position="{{value}}"
+                    ><span
+                        class="far {{#if checked}}fa-check-square{{else}}fa-square{{/if}} tb-check"
+                    ></span> {{label}}</a></li>
+                    {{/each}}
+                </ul>
             </div>
             <span class="tb-chev fas fa-chevron-down"></span>
         </div>
         <div class="tb-col-body">
             {{#each groups}}
-            <div class="tb-group {{cls}}" data-team-id="{{teamId}}" data-position="{{position}}">
+            <div
+                class="tb-group{{#if isHidden}} tb-hidden{{/if}}"
+                data-team-id="{{teamId}}"
+                data-position="{{position}}"
+            >
                 <div class="tb-group-label text-muted">{{label}}</div>
                 {{#each members}}
                 <div
-                    class="tb-card panel panel-default{{#if isLeader}} tb-lead{{/if}}"
+                    class="tb-card panel panel-default{{#if isTop}} tb-lead{{/if}}"
                     data-user-id="{{id}}"
                     data-team-id="{{teamId}}"
                     data-position="{{position}}"
@@ -301,6 +402,7 @@
                                 data-user-id="{{userId}}"
                                 data-to-team-id="{{toTeamId}}"
                                 data-from-team-id="{{fromTeamId}}"
+                                data-position="{{position}}"
                             >→ {{label}}</a></li>
                             {{/each}}
                             {{/if}}
@@ -313,6 +415,7 @@
                                 data-action="addToTeam"
                                 data-user-id="{{userId}}"
                                 data-to-team-id="{{toTeamId}}"
+                                data-position="{{position}}"
                             >+ {{label}}</a></li>
                             {{/each}}
                             {{/if}}
