@@ -1,150 +1,157 @@
 # MC Team Board
+
+**English** · [Українська](README.uk.md)
+
 <img width="1280" height="640" alt="cover" src="https://github.com/user-attachments/assets/446904c1-e77b-4b58-92b5-f4a1907b09e9" />
 
-Kanban-дошка команд: колонки — команди (Teams), картки — учасники, згруповані за
-позицією в команді. Список позицій — динамічний: береться з поля `positionList`
-кожної команди (з резервним набором Supervisor / Leader / Vice Leader / Member).
-Drag & drop між колонками змінює команду, між групами однієї колонки — позицію,
-у межах групи — особистий порядок карток. Зберігається одразу, з нативним
-toast-підтвердженням.
+A Kanban board of teams: columns are Teams, cards are members grouped by their
+position within the team. The position list is dynamic — it is taken from each
+team's `positionList` field (with a fallback set: Supervisor / Leader /
+Vice Leader / Member). Drag & drop between columns changes the team, between
+groups of one column changes the position, and within a group changes the
+personal card order. Everything is saved instantly, with a native toast
+confirmation.
 
-## Встановлення
+## Installation
 
-1. **Administration → Extensions** → завантажити `team-board-X.Y.Z.zip` → Install.
-2. **Administration → Rebuild** (виконується автоматично, але за потреби — вручну).
-3. Доступ: **Administration → Roles** → у потрібній ролі увімкнути scope
-   **Team Board** (enabled). Адміністратори мають доступ одразу.
-4. Пункт меню: **Administration → User Interface → Tab List** → додати **Team Board**
-   (стандартний механізм навігації EspoCRM).
-5. Кнопка **Team Board** також з'являється поруч із **Create Team** на сторінці
-   списку Teams.
+1. **Administration → Extensions** → upload `team-board-X.Y.Z.zip` → Install.
+2. **Administration → Rebuild** (runs automatically, but do it manually if needed).
+3. Access: **Administration → Roles** → enable the **Team Board** scope
+   (enabled) for the relevant role. Administrators have access right away.
+4. Menu item: **Administration → User Interface → Tab List** → add **Team Board**
+   (the platform's standard navigation mechanism).
+5. A **Team Board** button also appears next to **Create Team** on the Teams
+   list page.
 
-## Функціонал
+## Features
 
-### Дошка
+### Board
 
-- Колонки — команди, картки — користувачі, згруповані за позицією.
-- **Динамічний список позицій**: позиції беруться з поля `positionList` кожної
-  команди; якщо його немає — резервний набір (Supervisor / Leader / Vice Leader /
-  Member). Акцентною смугою виділяється лише верхня (top) позиція ієрархії;
-  решта показуються на одному рівні.
-- **Supervisor-и** показуються маленькими аватарами у правому верхньому куті
-  заголовка колонки (tooltip з ім'ям, клік відкриває профіль). Кут із
-  супервізорами з'являється лише якщо команда має позицію Supervisor.
-- **Меню видимості позицій** (⋮ у заголовку): вмикає/вимикає окремі позиції в
-  колонці; вибір зберігається per-user у Preferences (`teamBoardHiddenPositions`).
-  Лічильник команди рахує тільки видимі позиції.
-- **Додавання користувача без команди** (значок «+»): меню зі списком активних
-  користувачів, які не входять до жодної команди (з урахуванням User ACL);
-  доступне лише за права керування.
-- **Особистий порядок карток**: перетягування в межах однієї групи змінює
-  порядок; він зберігається per-user у Preferences (`teamBoardMemberOrder`).
-- **Клікабельність**: назва команди відкриває Team, ім'я користувача та аватар
-  супервізора — профіль User.
-- **Лічильник унікальних людей**: бейдж праворуч від назви «Team Board» —
-  кількість унікальних користувачів в усіх видимих командах.
-- **Порядок колонок**: колонки перетягуються за заголовок; порядок зберігається
-  per-user у Preferences (поле `teamBoardOrder`).
-- **Нативний UI EspoCRM**: panel-класи теми, `Espo.Ui`, аватари EspoCRM,
-  без сторонніх бібліотек.
-- **Мобільний екран**: колонки складаються вертикально, заголовок згортає
-  колонку; drag & drop на дотику — довге натискання (300 мс) на картці.
+- Columns are teams; cards are users grouped by position.
+- **Dynamic position list**: positions are taken from each team's `positionList`
+  field; if it is empty, a fallback set is used (Supervisor / Leader /
+  Vice Leader / Member). Only the top position of the hierarchy is highlighted
+  with an accent bar; the rest are shown on one level.
+- **Supervisors** are shown as small avatars in the top-right corner of the
+  column header (tooltip with the name, click opens the profile). The supervisor
+  corner appears only when the team has the Supervisor position.
+- **Position visibility menu** (⋮ in the header): toggles individual positions
+  on/off in the column; the choice is stored per user in Preferences
+  (`teamBoardHiddenPositions`). The team counter counts only visible positions.
+- **Adding a user without a team** (the “+” icon): a menu listing active users
+  who belong to no team (respecting the User ACL); available only with manage
+  rights.
+- **Personal card order**: dragging within a single group changes the order;
+  it is stored per user in Preferences (`teamBoardMemberOrder`).
+- **Clickable links**: the team name opens the Team; a user's name and a
+  supervisor's avatar open the User profile.
+- **Unique-people counter**: the badge to the right of the “Team Board” title —
+  the number of unique users across all visible teams.
+- **Column order**: columns are dragged by their header; the order is stored
+  per user in Preferences (the `teamBoardOrder` field).
+- **Native EspoCRM UI**: theme panel classes, `EspoCRM.Ui`, EspoCRM avatars, no
+  third-party libraries.
+- **Mobile screen**: columns stack vertically, the header collapses a column;
+  touch drag & drop is a long press (300 ms) on a card.
 
 ### Drag & drop
 
-- Між колонками — перенесення в іншу команду; в межах колонки між групами —
-  зміна позиції; у межах однієї групи — зміна особистого порядку карток
-  (індикатори вставки до/після). Збереження одразу, з toast-підтвердженням або
-  повідомленням про помилку.
-- **Кілька команд**: користувач може бути в кількох командах (як у EspoCRM).
-  Додавання без вилучення з поточної — Ctrl/Alt + drop або пункт меню «+ Команда».
-- **Викидання з команди**: перетягніть картку на порожнє поле поза колонками
-  або на зону внизу екрана. Також пункт «Прибрати з команди» в меню картки.
-  Прибирається лише зв'язок з командою — сам запис користувача не видаляється.
-- **Призначення Supervisor-а**: перетягніть картку на кут заголовка колонки
-  або скористайтесь меню картки. Бейджі супервізорів теж перетягуються:
-  у групу — зміна позиції, поза дошку — вилучення з команди.
-- Меню картки не обрізається дошкою (позиціонування відносно вікна,
-  біля нижнього краю екрана відкривається догори).
+- Between columns — move to another team; within a column, between groups —
+  change the position; within a single group — change the personal card order
+  (insert-before/after indicators). Saved instantly, with a toast confirmation
+  or an error message.
+- **Multiple teams**: a user can belong to several teams (as in EspoCRM). Adding
+  without removing from the current team — Ctrl/Alt + drop, or the “+ Team” menu
+  item.
+- **Removing from a team**: drag a card onto empty space outside the columns or
+  onto the drop zone at the bottom of the screen. There is also a “Remove from
+  team” card menu item. Only the team link is removed — the user record itself
+  is never deleted.
+- **Assigning a Supervisor**: drag a card onto the column header corner, or use
+  the card menu. Supervisor badges are draggable too: into a group — change the
+  position; off the board — remove from the team.
+- The card menu is not clipped by the board (it is positioned relative to the
+  window and opens upward near the bottom edge of the screen).
 
-### Модель даних і доступ
+### Data model and access
 
-- **Position зберігається у зв'язку User↔Team** — у нативній колонці `role`
-  таблиці `team_user` (той самий механізм, що й стандартна командна позиція
-  EspoCRM: атрибути `teamRole`/`userRole`). Жодних змін схеми БД. Один користувач
-  може мати різні позиції в різних командах (наприклад, Supervisor у кількох).
-- **Position ≠ Role (ACL)**: глобальні ролі EspoCRM не зачіпаються і не
-  синхронізуються з позиціями.
-- Дошка показує лише команди та користувачів, видимі за ACL поточного
-  користувача (ті ж правила, що для сутностей Team і User).
-- **Ексклюзивна лише верхня (top) позиція**: призначення нового власника
-  автоматично переводить попереднього в нижню (bottom) позицію того ж
-  списку позицій команди (в межах однієї команди).
-- Перетягувати картки може користувач із правом **edit на User**. Увага:
-  стандартні ролі EspoCRM дозволяють для User лише рівні edit `own`/`no`,
-  тому фактично чужі картки може рухати **лише адміністратор**; користувач
-  із edit `own` може перемістити тільки самого себе. Для інших дошка
-  доступна в режимі перегляду.
+- **Position is stored in the User↔Team relationship** — in the native `role`
+  column of the `team_user` table (the same mechanism as the standard team
+  position in EspoCRM: the `teamRole`/`userRole` attributes). No DB schema changes.
+  A single user can hold different positions in different teams (for example,
+  Supervisor in several).
+- **Position ≠ Role (ACL)**: global EspoCRM roles are not touched and are not
+  synchronized with positions.
+- The board shows only the teams and users visible under the current user's ACL
+  (the same rules as for the Team and User entities).
+- **Only the top position is exclusive**: assigning a new holder automatically
+  moves the previous one to the bottom position of the same team's position
+  list (within one team).
+- Cards can be dragged by a user with **edit rights on User**. Note: standard
+  EspoCRM roles allow only `own`/`no` edit levels for User, so in practice other
+  people's cards can be moved **only by an administrator**; a user with edit
+  `own` can move only themselves. For everyone else the board is available in
+  read-only mode.
 
 ## API
 
-| Endpoint | Метод | Опис |
+| Endpoint | Method | Description |
 |---|---|---|
-| `TeamBoard/data` | GET | Дані дошки (команди, учасники, позиції) з урахуванням ACL |
-| `TeamBoard/move` | POST | `{userId, teamId, fromTeamId?, position}` — перенесення/зміна позиції; без `fromTeamId` — додавання в команду без вилучення з поточної |
-| `TeamBoard/removeMember` | POST | `{userId, teamId}` — вилучення користувача з команди |
+| `TeamBoard/data` | GET | Board data (teams, members, positions), ACL-aware |
+| `TeamBoard/move` | POST | `{userId, teamId, fromTeamId?, position}` — move/change position; without `fromTeamId`, adds to the team without removing from the current one |
+| `TeamBoard/removeMember` | POST | `{userId, teamId}` — remove a user from a team |
 
-## Тести
+## Tests
 
-Розширення протестовано наживо на реальному EspoCRM 10.0.0 (docker-compose
-у цій папці): встановлення й upgrade через Extensions, усі API-ендпоінти, ACL
-(403 без ролі, read-only без права move, edit `own` — лише себе), валідація
-(400/404), drag & drop у всіх сценаріях, збереження порядку колонок,
-мобільний touch-режим; консоль і логи EspoCRM без помилок.
+The extension was live-tested on a real EspoCRM 10.0.0 (docker-compose in this
+folder): installation and upgrade via Extensions, all API endpoints, ACL (403
+without the role, read-only without move rights, edit `own` — self only),
+validation (400/404), drag & drop in all scenarios, saving the column order,
+mobile touch mode; the console and EspoCRM logs showed no errors.
 
-### Автоматичні тести (ext-template)
+### Automated tests (ext-template)
 
-Інтеграційні тести написані, але потребують повного dev-інстансу. Запуск:
+Integration tests are written but require a full dev instance. To run:
 
 ```bash
 cd extension/team-board-src
 npm install
-cp config-default.json config.json   # вказати реальні креденшели БД
-node build --all                     # розгорне dev-інстанс EspoCRM у ./site
+cp config-default.json config.json   # set real DB credentials
+node build --all                     # deploys a dev EspoCRM instance into ./site
 npm run unit-tests
 npm run integration-tests
 ```
 
-## Покриття вимог
+## Requirements coverage
 
-| Вимога | Реалізація | Перевірка |
+| Requirement | Implementation | Verification |
 |---|---|---|
-| Колонки = команди, картки за динамічним списком позицій | `board.tpl`, `views/team-board/board.js` | вручну в UI; `BoardTest::testGetDataReturnsTeamsAndMembers` |
-| Динамічний список позицій із `Team.positionList` | `Tools/Board/Position::listFor()`, `Service.php` | `PositionTest`, вручну в UI |
-| Supervisor окремо, аватарами в куті заголовка | `board.tpl` (`tb-sups`), лише за наявності позиції Supervisor | вручну в UI |
-| Видимість позицій per-user | `togglePositionVisibility()`, Preferences `teamBoardHiddenPositions` | вручну в UI |
-| Особистий порядок карток per-user | DnD у групі, Preferences `teamBoardMemberOrder` | вручну в UI |
-| Додавання користувача без команди | меню «+», `Service::findFreeUsers()` (з User ACL) | вручну в UI |
-| Position у зв'язку User↔Team, не в User | колонка `role` зв'язку `team_user`; `Tools/Board/Service.php` | `testSupervisorInMultipleTeams` |
-| Role ≠ Position | позиції не читають і не пишуть ACL-ролі | code review: `Service.php` не звертається до Roles |
-| DnD між колонками = зміна команди | `initDragAndDrop`/`initTouchDragAndDrop` → `POST TeamBoard/move` | `testMoveBetweenTeams` |
-| DnD в межах колонки = зміна Position | drop у групу тієї ж команди | `testMoveChangesPositionWithinTeam` |
-| Збереження одразу + toast/помилка | `move()` → `Espo.Ui.success` / `Espo.Ui.error` | вручну в UI |
-| Кнопка біля Create Team | `clientDefs/Team.json` → `menu.list.buttons` | вручну в UI |
-| Пункт бокового меню через стандартні налаштування | `scopes/TeamBoard.json` → `"tab": true` | вручну: Admin → User Interface |
-| Доступ через стандартний ACL | scope `TeamBoard` (`"acl": "boolean"`) + фільтрація Team/User ACL у сервісі | `testNoAccessWithoutAclScope`, `testAccessWithAclScope` |
-| Ексклюзивна лише top-позиція, попередній → bottom | `Service::demoteOthers()`, `Position::topOf()`/`bottomOf()` | `testPromotingLeaderDemotesPreviousLeader` |
-| Валідація позиції | `Service::move()` | `testBadPositionIsRejected` |
-| Адаптивність (desktop скрол / mobile стек + touch DnD) | media query в `board.tpl`, touch-логіка у view | вручну на пристрої |
-| Нативний UI EspoCRM | panel-класи теми, `Espo.Ui`, аватари EspoCRM, без сторонніх бібліотек | вручну в UI |
+| Columns = teams, cards by the dynamic position list | `board.tpl`, `views/team-board/board.js` | manually in the UI; `BoardTest::testGetDataReturnsTeamsAndMembers` |
+| Dynamic position list from `Team.positionList` | `Tools/Board/Position::listFor()`, `Service.php` | `PositionTest`, manually in the UI |
+| Supervisor separate, as avatars in the header corner | `board.tpl` (`tb-sups`), only when the Supervisor position exists | manually in the UI |
+| Per-user position visibility | `togglePositionVisibility()`, Preferences `teamBoardHiddenPositions` | manually in the UI |
+| Per-user card order | DnD within a group, Preferences `teamBoardMemberOrder` | manually in the UI |
+| Adding a user without a team | the “+” menu, `Service::findFreeUsers()` (with User ACL) | manually in the UI |
+| Position in the User↔Team relationship, not on User | the `role` column of the `team_user` relation; `Tools/Board/Service.php` | `testSupervisorInMultipleTeams` |
+| Role ≠ Position | positions do not read or write ACL roles | code review: `Service.php` does not touch Roles |
+| DnD between columns = change team | `initDragAndDrop`/`initTouchDragAndDrop` → `POST TeamBoard/move` | `testMoveBetweenTeams` |
+| DnD within a column = change Position | drop into a group of the same team | `testMoveChangesPositionWithinTeam` |
+| Instant save + toast/error | `move()` → `Espo.Ui.success` / `Espo.Ui.error` | manually in the UI |
+| Button next to Create Team | `clientDefs/Team.json` → `menu.list.buttons` | manually in the UI |
+| Side-menu item via standard settings | `scopes/TeamBoard.json` → `"tab": true` | manually: Admin → User Interface |
+| Access via standard ACL | the `TeamBoard` scope (`"acl": "boolean"`) + Team/User ACL filtering in the service | `testNoAccessWithoutAclScope`, `testAccessWithAclScope` |
+| Only the top position is exclusive, previous → bottom | `Service::demoteOthers()`, `Position::topOf()`/`bottomOf()` | `testPromotingLeaderDemotesPreviousLeader` |
+| Position validation | `Service::move()` | `testBadPositionIsRejected` |
+| Responsiveness (desktop scroll / mobile stack + touch DnD) | media query in `board.tpl`, touch logic in the view | manually on a device |
+| Native EspoCRM UI | theme panel classes, `Espo.Ui`, Espo avatars, no third-party libraries | manually in the UI |
 
-## Сумісність версій
+## Version compatibility
 
-`acceptableVersions: ">=9.3.0"`. Протестовано наживо на
-[EspoCRM 10.0.0](https://github.com/espocrm/espocrm/releases/tag/10.0.0).
-Використані конвенції (ESM frontend, `Api\Action` backend) актуальні для
-гілок 9.3+ і 10.x.
+`acceptableVersions: ">=9.3.0"`. Live-tested on
+[EspoCRM 10.0.0](https://github.com/espocrm/espocrm/releases/tag/10.0.0). The
+conventions used (ESM frontend, `Api\Action` backend) are current for the 9.3+
+and 10.x branches.
 
-## Ліцензія
+## License
 
-GNU General Public License v3 — див. [LICENSE](LICENSE).
+GNU General Public License v3 — see [LICENSE](LICENSE).
