@@ -6,6 +6,13 @@
         overflow-x: auto;
         padding-bottom: 12px;
         min-height: 200px;
+        /* Hide the container's own scrollbar — the fixed .tb-hscroll at the
+           bottom of the window is the single visible horizontal scrollbar. */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .team-board::-webkit-scrollbar {
+        display: none;
     }
     .team-board .tb-col {
         flex: 0 0 auto;

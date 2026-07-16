@@ -410,4 +410,110 @@ class BoardTest extends BaseTestCase
 
         $this->assertSame(1, $data->totalUnique);
     }
+
+    // ------------------------------------------------------------------
+    // Security: team-membership mutation must require EDIT access to the
+    // team, not merely read. Read-only team access permitting a move would
+    // let a user add themselves (or a user they can edit) to any readable
+    // team and inherit that team's record access — a privilege escalation
+    // that bypasses the admin-restricted User.teams field. (SEC-ACL-01/03,
+    // SEC-FLD-01)
+    // ------------------------------------------------------------------
+
+    public function testMoveIsForbiddenWithTeamReadOnly(): void
+    {
+        $team = $this->createTeam('Team Sec A');
+        $victim = $this->createMember('sec.victim.a');
+
+        $this->createUser('sec.reader', [
+            'data' => [
+                'TeamBoard' => true,
+                'User' => ['read' => 'all', 'edit' => 'all'],
+                'Team' => ['read' => 'all'],
+            ],
+        ]);
+
+        $this->auth('sec.reader');
+
+        $this->expectException(Forbidden::class);
+
+        $this->getInjectableFactory()
+            ->create(Service::class)
+            ->move($victim->getId(), $team->getId(), null, Position::MEMBER);
+    }
+
+    public function testMoveIsAllowedWithTeamEdit(): void
+    {
+        $team = $this->createTeam('Team Sec B');
+        $victim = $this->createMember('sec.victim.b');
+
+        $this->createUser('sec.manager', [
+            'data' => [
+                'TeamBoard' => true,
+                'User' => ['read' => 'all', 'edit' => 'all'],
+                'Team' => ['read' => 'all', 'edit' => 'all'],
+            ],
+        ]);
+
+        $this->auth('sec.manager');
+
+        $this->getInjectableFactory()
+            ->create(Service::class)
+            ->move($victim->getId(), $team->getId(), null, Position::MEMBER);
+
+        $this->assertSame(
+            Position::MEMBER,
+            $this->getRole($team, $victim),
+            'A user with Team edit access can change team membership.'
+        );
+    }
+
+    public function testRemoveMemberIsForbiddenWithTeamReadOnly(): void
+    {
+        $em = $this->getEntityManager();
+
+        $team = $this->createTeam('Team Sec C');
+        $victim = $this->createMember('sec.victim.c');
+
+        $em->getRelation($team, 'users')->relate($victim, ['role' => Position::MEMBER]);
+
+        $this->createUser('sec.reader2', [
+            'data' => [
+                'TeamBoard' => true,
+                'User' => ['read' => 'all', 'edit' => 'all'],
+                'Team' => ['read' => 'all'],
+            ],
+        ]);
+
+        $this->auth('sec.reader2');
+
+        $this->expectException(Forbidden::class);
+
+        $this->getInjectableFactory()
+            ->create(Service::class)
+            ->removeMember($victim->getId(), $team->getId());
+    }
+
+    public function testSelfJoinToReadableTeamIsForbidden(): void
+    {
+        // The core escalation: a non-admin with edit access to their own
+        // user + read on a team must NOT be able to add themselves to it.
+        $team = $this->createTeam('Team Sec D');
+
+        $attacker = $this->createUser('sec.selfjoin', [
+            'data' => [
+                'TeamBoard' => true,
+                'User' => ['read' => 'own', 'edit' => 'own'],
+                'Team' => ['read' => 'all'],
+            ],
+        ]);
+
+        $this->auth('sec.selfjoin');
+
+        $this->expectException(Forbidden::class);
+
+        $this->getInjectableFactory()
+            ->create(Service::class)
+            ->move($attacker->getId(), $team->getId(), null, Position::MEMBER);
+    }
 }

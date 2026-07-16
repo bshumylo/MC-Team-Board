@@ -126,11 +126,15 @@ class Service
             throw new Forbidden("No edit access to user.");
         }
 
+        // Changing a team's membership/positions modifies the team's roster
+        // and can grant the moved user team-level record access, so it must
+        // require EDIT access to the team — not merely read. Read-only team
+        // access must never be enough to add or move a member.
         if (
-            !$this->acl->checkEntityRead($team) ||
-            ($fromTeam && !$this->acl->checkEntityRead($fromTeam))
+            !$this->acl->checkEntityEdit($team) ||
+            ($fromTeam && !$this->acl->checkEntityEdit($fromTeam))
         ) {
-            throw new Forbidden("No access to team.");
+            throw new Forbidden("No edit access to team.");
         }
 
         $this->entityManager
@@ -188,8 +192,10 @@ class Service
             throw new Forbidden("No edit access to user.");
         }
 
-        if (!$this->acl->checkEntityRead($team)) {
-            throw new Forbidden("No access to team.");
+        // Removing a member changes the team's roster — require EDIT access
+        // to the team, consistent with move().
+        if (!$this->acl->checkEntityEdit($team)) {
+            throw new Forbidden("No edit access to team.");
         }
 
         $this->entityManager
