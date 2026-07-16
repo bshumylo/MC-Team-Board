@@ -18,7 +18,10 @@ confirmation.
 1. **Administration → Extensions** → upload `team-board-X.Y.Z.zip` → Install.
 2. **Administration → Rebuild** (runs automatically, but do it manually if needed).
 3. Access: **Administration → Roles** → enable the **Team Board** scope
-   (enabled) for the relevant role. Administrators have access right away.
+   (enabled) for the relevant role. This grants **view** access. To let a
+   non-admin **manage** the board (move / add / remove members), the role also
+   needs **`Team` edit** (and `User` edit to move other people). Administrators
+   have full access right away.
 4. Menu item: **Administration → User Interface → Tab List** → add **Team Board**
    (the platform's standard navigation mechanism).
 5. A **Team Board** button also appears next to **Create Team** on the Teams
@@ -88,11 +91,21 @@ confirmation.
 - **Only the top position is exclusive**: assigning a new holder automatically
   moves the previous one to the bottom position of the same team's position
   list (within one team).
-- Cards can be dragged by a user with **edit rights on User**. Note: standard
-  EspoCRM roles allow only `own`/`no` edit levels for User, so in practice other
-  people's cards can be moved **only by an administrator**; a user with edit
-  `own` can move only themselves. For everyone else the board is available in
-  read-only mode.
+- **Moving / adding / removing a member requires edit access to BOTH the User
+  and the Team.** Changing a team's roster grants the moved user team-level
+  record access, so — for security — read access to the team is not enough; the
+  `move` and `removeMember` endpoints require **`Team` edit** as well. A user
+  with only `Team` read gets the board in read-only mode.
+  - Standard EspoCRM roles allow only `own`/`no` edit levels for User, so in
+    practice other people's cards can be moved **only by an administrator**; a
+    user with User edit `own` can move only themselves — and only if they also
+    have Team edit.
+  - **Board-manager role (non-admin)**: `TeamBoard` = yes, `Team` = edit
+    (own/team/all as needed), `User` = edit (team/all to move other people).
+    Administrators have all of this by default.
+  - Note: the `TeamBoard` scope ACL is a simple on/off toggle (`"acl":
+    "boolean"`) — there is no separate "edit the board" permission; roster
+    changes are deliberately governed by the standard **Team** edit right.
 
 ## API
 
