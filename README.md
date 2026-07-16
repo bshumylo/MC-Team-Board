@@ -168,4 +168,6 @@ and 10.x branches.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+AGPL-3.0 — see [LICENSE](LICENSE).
+
+Author: bshumylo
