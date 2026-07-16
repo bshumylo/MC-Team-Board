@@ -155,4 +155,4 @@ and 10.x branches.
 
 ## License
 
-GNU General Public License v3 — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
