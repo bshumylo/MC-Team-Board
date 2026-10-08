@@ -30,7 +30,7 @@ Requires EspoCRM 10.0.8 or later, PHP 8.3 or later, and cron configured for Espo
 
 ## More
 
-- [Full feature description](docs/features.md) · [Повний опис функціоналу](docs/features.uk.md)
+- [Full feature description](docs/features.md)
 - Upgrading from version 1, scheduled jobs, building from source and known limitations are described there.
 
 ## License
