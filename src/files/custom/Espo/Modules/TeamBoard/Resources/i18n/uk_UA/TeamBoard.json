@@ -2,7 +2,7 @@
     "labels": {
         "Photo": "Фото",
         "Team Board": "Дошка команд",
-        "Members": "Учасники",
+        "Members": "Члени",
         "Supervisors": "Супервізори",
         "Drop here": "Перетягніть сюди",
         "No teams": "Немає доступних команд.",
@@ -29,9 +29,9 @@
         "Composition as of": "Склад на",
         "Reserve": "Резерв",
         "Inactive in CRM": "Неактивний у CRM",
-        "People without an active team": "Учасники без активної команди",
-        "Member without an active team": "Учасник без активної команди",
-        "Members without an active team": "Учасники без активної команди",
+        "People without an active team": "Члени без активної команди",
+        "Member without an active team": "Член без активної команди",
+        "Members without an active team": "Члени без активної команди",
         "draftOriginFrom": "з: {name}",
         "Draft": "Чернетка",
         "Confirmed": "Підтверджено",
@@ -50,8 +50,8 @@
         "Colour": "Колір",
         "Width": "Ширина",
         "EspoCRM user": "Користувач EspoCRM",
-        "Board only — no EspoCRM account": "Лише на дошці — без облікового запису EspoCRM",
-        "Archive person": "Архівувати людину",
+        "Board only — no EspoCRM account": "Лише на дошці — без облікового запису в системі",
+        "Archive person": "Архівувати",
         "Archive team": "Архівувати команду",
         "Restore team": "Відновити команду",
         "Historical assignments remain": "Історичні призначення залишаються доступними",
@@ -74,7 +74,7 @@
         "Supervisor": "Супервізор",
         "Leader": "Лідер",
         "Vice Leader": "Віцелідер",
-        "Member": "Учасник"
+        "Member": "Член"
     },
     "messages": {
         "moved": "{name} → {team} · {position}",
