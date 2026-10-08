@@ -32,6 +32,7 @@ Requires EspoCRM 10.0.8 or later, PHP 8.3 or later, and cron configured for Espo
 
 - [Full feature description](docs/features.md)
 - Upgrading from version 1, scheduled jobs, building from source and known limitations are described there.
+- EspoCRM 9.x: version 1 stays available on the [`v1` branch](../../tree/v1). It is no longer developed.
 
 ## License
 
