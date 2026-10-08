@@ -2,6 +2,8 @@
 
 **English** · [Українська](README.uk.md)
 
+> **Legacy version 1.** This branch is for EspoCRM 9.x and is no longer developed. The current version 2 (EspoCRM 10.0.8 or later) is on the [`main` branch](../../tree/main).
+
 <img width="1280" height="640" alt="preview-en" src="https://github.com/user-attachments/assets/df68de7c-789c-4897-99d4-5952eebce113" />
 
 
