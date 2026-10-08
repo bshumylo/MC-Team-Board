@@ -20,8 +20,6 @@
 
 ![Картка людини з історією](docs/screenshots/uk/02-person-history.png)
 
-<img src="docs/screenshots/uk/03-mobile.png" alt="Вузький екран: дошка в одну колонку" width="320">
-
 ## Встановлення
 
 1. Завантажте `team-board-2.0.0.zip` зі сторінки [Releases](../../releases).

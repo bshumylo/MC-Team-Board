@@ -20,8 +20,6 @@ Version **2.0.0** · EspoCRM **10.0.8+** · PHP **8.3+** · AGPL-3.0
 
 ![Person card with History](docs/screenshots/en/02-person-history.png)
 
-<img src="docs/screenshots/en/03-mobile.png" alt="Narrow screen: single-column board" width="320">
-
 ## Install
 
 1. Download `team-board-2.0.0.zip` from [Releases](../../releases).
