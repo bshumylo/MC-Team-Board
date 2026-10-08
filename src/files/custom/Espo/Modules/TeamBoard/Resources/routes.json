@@ -13,5 +13,80 @@
         "route": "/TeamBoard/removeMember",
         "method": "post",
         "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostRemoveMember"
+    },
+    {
+        "route": "/TeamBoard/timeline",
+        "method": "get",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\GetTimeline"
+    },
+    {
+        "route": "/TeamBoard/assignment",
+        "method": "post",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostAssignment"
+    },
+    {
+        "route": "/TeamBoard/assignment/:id",
+        "method": "put",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PutAssignment"
+    },
+    {
+        "route": "/TeamBoard/assignment/:id",
+        "method": "delete",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\DeleteAssignment"
+    },
+    {
+        "route": "/TeamBoard/member",
+        "method": "post",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostMember"
+    },
+    {
+        "route": "/TeamBoard/member/:id",
+        "method": "put",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PutMember"
+    },
+    {
+        "route": "/TeamBoard/member/:id/archive",
+        "method": "post",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostMemberArchive"
+    },
+    {
+        "route": "/TeamBoard/member/:id/photo",
+        "method": "post",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostMemberPhoto"
+    },
+    {
+        "route": "/TeamBoard/member/:id/photo",
+        "method": "delete",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\DeleteMemberPhoto"
+    },
+    {
+        "route": "/TeamBoard/member/:id/timeline",
+        "method": "get",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\GetMemberTimeline"
+    },
+    {
+        "route": "/TeamBoard/squad",
+        "method": "post",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostSquad"
+    },
+    {
+        "route": "/TeamBoard/squad/:id",
+        "method": "put",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PutSquad"
+    },
+    {
+        "route": "/TeamBoard/squad/:id/archive",
+        "method": "post",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostSquadArchive"
+    },
+    {
+        "route": "/TeamBoard/archived-squads",
+        "method": "get",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\GetArchivedSquads"
+    },
+    {
+        "route": "/TeamBoard/squad/:id/restore",
+        "method": "post",
+        "actionClassName": "Espo\\Modules\\TeamBoard\\Api\\PostSquadRestore"
     }
 ]

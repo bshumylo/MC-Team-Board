@@ -1,0 +1,23 @@
+{
+    "labels": {
+        "Create TeamBoardAssignment": "Створити період"
+    },
+    "fields": {
+        "member": "Учасник",
+        "team": "Команда",
+        "position": "Посада",
+        "dateFrom": "З",
+        "dateTo": "До (не включно)",
+        "status": "Статус",
+        "note": "Нотатка",
+        "appliedAt": "Застосовано",
+        "supersedes": "Закритий період",
+        "supersededDateTo": "Попередня дата завершення"
+    },
+    "options": {
+        "status": {
+            "draft": "Чернетка",
+            "confirmed": "Підтверджено"
+        }
+    }
+}

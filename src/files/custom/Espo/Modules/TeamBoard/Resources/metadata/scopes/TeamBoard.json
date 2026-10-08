@@ -2,5 +2,6 @@
     "entity": false,
     "tab": true,
     "acl": "boolean",
+    "iconClass": "fas fa-columns",
     "module": "TeamBoard"
 }

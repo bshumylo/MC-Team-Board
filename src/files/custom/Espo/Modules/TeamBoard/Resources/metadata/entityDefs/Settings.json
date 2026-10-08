@@ -1,0 +1,16 @@
+{
+    "fields": {
+        "teamBoardCardWidth": {
+            "type": "int",
+            "default": 260,
+            "min": 160,
+            "max": 480
+        },
+        "teamBoardAvatarSize": {
+            "type": "int",
+            "default": 52,
+            "min": 24,
+            "max": 96
+        }
+    }
+}

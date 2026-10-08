@@ -1,0 +1,23 @@
+{
+    "labels": {
+        "Create TeamBoardAssignment": "Create Assignment"
+    },
+    "fields": {
+        "member": "Member",
+        "team": "Team",
+        "position": "Position",
+        "dateFrom": "From",
+        "dateTo": "Until (exclusive)",
+        "status": "Status",
+        "note": "Note",
+        "appliedAt": "Applied At",
+        "supersedes": "Closed Period",
+        "supersededDateTo": "Previous End Date"
+    },
+    "options": {
+        "status": {
+            "draft": "Draft",
+            "confirmed": "Confirmed"
+        }
+    }
+}

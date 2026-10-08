@@ -1,0 +1,10 @@
+{
+    "entity": true,
+    "object": true,
+    "acl": true,
+    "layouts": true,
+    "tab": false,
+    "module": "TeamBoard",
+    "customizable": true,
+    "importable": false
+}

@@ -1,0 +1,12 @@
+{
+    "accessControlFilterResolverClassName": "Espo\\Core\\Select\\AccessControl\\FilterResolvers\\Boolean",
+    "accessControlFilterClassNameMap": {
+        "mandatory": "Espo\\Modules\\TeamBoard\\Classes\\Select\\TeamBoardMember\\AccessControlFilters\\Mandatory"
+    },
+    "primaryFilterClassNameMap": {
+        "active": "Espo\\Modules\\TeamBoard\\Classes\\Select\\TeamBoardMember\\PrimaryFilters\\Active",
+        "boardOnly": "Espo\\Modules\\TeamBoard\\Classes\\Select\\TeamBoardMember\\PrimaryFilters\\BoardOnly",
+        "system": "Espo\\Modules\\TeamBoard\\Classes\\Select\\TeamBoardMember\\PrimaryFilters\\System",
+        "archived": "Espo\\Modules\\TeamBoard\\Classes\\Select\\TeamBoardMember\\PrimaryFilters\\Archived"
+    }
+}

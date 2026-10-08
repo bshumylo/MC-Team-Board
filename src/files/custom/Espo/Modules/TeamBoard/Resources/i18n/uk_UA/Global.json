@@ -1,8 +1,14 @@
 {
     "scopeNames": {
-        "TeamBoard": "Дошка команд"
+        "TeamBoard": "Дошка команд",
+        "TeamBoardAssignment": "Період",
+        "TeamBoardMember": "Учасник дошки",
+        "TeamBoardSquad": "Команда дошки"
     },
     "scopeNamesPlural": {
-        "TeamBoard": "Дошка команд"
+        "TeamBoard": "Дошка команд",
+        "TeamBoardAssignment": "Періоди",
+        "TeamBoardMember": "Учасники дошки",
+        "TeamBoardSquad": "Команди дошки"
     }
 }

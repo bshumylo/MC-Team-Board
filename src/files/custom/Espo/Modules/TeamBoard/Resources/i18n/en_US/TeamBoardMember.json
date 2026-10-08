@@ -1,0 +1,36 @@
+{
+    "fields": {
+        "user": "EspoCRM User",
+        "name": "Board Name",
+        "photo": "Board Photo",
+        "isArchived": "Archived",
+        "createdAt": "Created At",
+        "modifiedAt": "Modified At",
+        "createdBy": "Created By",
+        "modifiedBy": "Modified By",
+        "personFirstName": "First Name",
+        "personLastName": "Last Name",
+        "origin": "Origin"
+    },
+    "links": {
+        "user": "EspoCRM User",
+        "createdBy": "Created By",
+        "modifiedBy": "Modified By"
+    },
+    "options": {
+        "origin": {
+            "boardOnly": "Board only",
+            "system": "System"
+        }
+    },
+    "labels": {
+        "Create Board User": "Create Board User",
+        "Board": "Board"
+    },
+    "presetFilters": {
+        "active": "Active",
+        "boardOnly": "Board only",
+        "system": "System",
+        "archived": "Archived"
+    }
+}

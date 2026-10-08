@@ -1,0 +1,36 @@
+{
+    "fields": {
+        "user": "Користувач EspoCRM",
+        "name": "Ім’я на дошці",
+        "photo": "Фото на дошці",
+        "isArchived": "Архівовано",
+        "createdAt": "Створено",
+        "modifiedAt": "Змінено",
+        "createdBy": "Створив",
+        "modifiedBy": "Змінив",
+        "personFirstName": "Ім'я",
+        "personLastName": "Прізвище",
+        "origin": "Походження"
+    },
+    "links": {
+        "user": "Користувач EspoCRM",
+        "createdBy": "Створив",
+        "modifiedBy": "Змінив"
+    },
+    "options": {
+        "origin": {
+            "boardOnly": "Лише дошка",
+            "system": "Системний"
+        }
+    },
+    "labels": {
+        "Create Board User": "Створити користувача дошки",
+        "Board": "Дошка"
+    },
+    "presetFilters": {
+        "active": "Активні",
+        "boardOnly": "Лише дошка",
+        "system": "Системні",
+        "archived": "Архівні"
+    }
+}

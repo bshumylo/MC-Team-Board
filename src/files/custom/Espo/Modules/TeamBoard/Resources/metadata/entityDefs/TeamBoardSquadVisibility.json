@@ -1,0 +1,43 @@
+{
+    "fields": {
+        "boardSquad": {
+            "type": "link"
+        },
+        "effectiveDate": {
+            "type": "date",
+            "required": true
+        },
+        "state": {
+            "type": "enum",
+            "options": ["active", "archived"],
+            "required": true
+        },
+        "createdAt": {
+            "type": "datetime",
+            "readOnly": true
+        },
+        "modifiedAt": {
+            "type": "datetime",
+            "readOnly": true
+        }
+    },
+    "links": {
+        "boardSquad": {
+            "type": "belongsTo",
+            "entity": "TeamBoardSquad"
+        }
+    },
+    "indexes": {
+        "squadDateState": {
+            "type": "unique",
+            "columns": ["boardSquadId", "effectiveDate", "state"]
+        },
+        "squadDate": {
+            "columns": ["boardSquadId", "effectiveDate"]
+        }
+    },
+    "collection": {
+        "orderBy": "effectiveDate",
+        "order": "desc"
+    }
+}

@@ -1,0 +1,10 @@
+[
+    {
+        "rows": [
+            [{"name": "member"}, {"name": "team"}],
+            [{"name": "position"}, {"name": "status"}],
+            [{"name": "dateFrom"}, {"name": "dateTo"}],
+            [{"name": "note"}, false]
+        ]
+    }
+]

@@ -1,0 +1,6 @@
+[
+    {"name": "personFirstName", "link": true},
+    {"name": "personLastName", "link": true},
+    {"name": "origin", "width": 18},
+    {"name": "isArchived", "width": 12}
+]

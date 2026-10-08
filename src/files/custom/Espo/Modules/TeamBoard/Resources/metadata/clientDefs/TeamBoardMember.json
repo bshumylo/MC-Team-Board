@@ -1,0 +1,26 @@
+{
+    "controller": "team-board:controllers/team-board-member",
+    "iconClass": "fas fa-user-friends",
+    "views": {
+        "list": "team-board:views/team-board-member/list"
+    },
+    "recordViews": {
+        "list": "team-board:views/team-board-member/record/list"
+    },
+    "filterList": [
+        {"name": "active"},
+        {"name": "boardOnly"},
+        {"name": "system"},
+        {"name": "archived"}
+    ],
+    "defaultFilterData": {
+        "primary": "active"
+    },
+    "createDisabled": true,
+    "massUpdateDisabled": true,
+    "massRemoveDisabled": true,
+    "exportDisabled": true,
+    "mergeDisabled": true,
+    "massFollowDisabled": true,
+    "importDisabled": true
+}

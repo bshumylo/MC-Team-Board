@@ -1,0 +1,175 @@
+{
+    "fields": {
+        "user": {
+            "type": "link"
+        },
+        "name": {
+            "type": "varchar",
+            "maxLength": 150
+        },
+        "firstName": {
+            "type": "varchar",
+            "maxLength": 100
+        },
+        "lastName": {
+            "type": "varchar",
+            "maxLength": 100
+        },
+        "personFirstName": {
+            "type": "varchar",
+            "view": "team-board:views/team-board-member/fields/person-first-name",
+            "notStorable": true,
+            "readOnly": true,
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "importDisabled": true,
+            "exportDisabled": true,
+            "select": {
+                "select": "COALESCE:(tbmUser.firstName, firstName)",
+                "leftJoins": [
+                    [
+                        "user",
+                        "tbmUser"
+                    ]
+                ]
+            },
+            "order": {
+                "order": [
+                    [
+                        "COALESCE:(tbmUser.firstName, firstName)",
+                        "{direction}"
+                    ]
+                ],
+                "leftJoins": [
+                    [
+                        "user",
+                        "tbmUser"
+                    ]
+                ]
+            }
+        },
+        "personLastName": {
+            "type": "varchar",
+            "notStorable": true,
+            "readOnly": true,
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "importDisabled": true,
+            "exportDisabled": true,
+            "select": {
+                "select": "COALESCE:(tbmUser.lastName, lastName)",
+                "leftJoins": [
+                    [
+                        "user",
+                        "tbmUser"
+                    ]
+                ]
+            },
+            "order": {
+                "order": [
+                    [
+                        "COALESCE:(tbmUser.lastName, lastName)",
+                        "{direction}"
+                    ]
+                ],
+                "leftJoins": [
+                    [
+                        "user",
+                        "tbmUser"
+                    ]
+                ]
+            }
+        },
+        "origin": {
+            "type": "enum",
+            "options": [
+                "boardOnly",
+                "system"
+            ],
+            "notStorable": true,
+            "readOnly": true,
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "importDisabled": true,
+            "exportDisabled": true,
+            "select": {
+                "select": "IF:(IS_NULL:(userId), 'boardOnly', 'system')"
+            },
+            "order": {
+                "order": [
+                    [
+                        "IF:(IS_NULL:(userId), 'boardOnly', 'system')",
+                        "{direction}"
+                    ]
+                ]
+            }
+        },
+        "note": {
+            "type": "text"
+        },
+        "photo": {
+            "type": "image",
+            "previewSize": "small"
+        },
+        "isArchived": {
+            "type": "bool",
+            "default": false,
+            "required": true
+        },
+        "createdAt": {
+            "type": "datetime",
+            "readOnly": true
+        },
+        "modifiedAt": {
+            "type": "datetime",
+            "readOnly": true
+        },
+        "createdBy": {
+            "type": "link",
+            "readOnly": true
+        },
+        "modifiedBy": {
+            "type": "link",
+            "readOnly": true
+        }
+    },
+    "links": {
+        "user": {
+            "type": "belongsTo",
+            "entity": "User"
+        },
+        "createdBy": {
+            "type": "belongsTo",
+            "entity": "User"
+        },
+        "modifiedBy": {
+            "type": "belongsTo",
+            "entity": "User"
+        }
+    },
+    "indexes": {
+        "userId": {
+            "type": "unique",
+            "columns": [
+                "userId"
+            ]
+        },
+        "archive": {
+            "columns": [
+                "isArchived"
+            ]
+        }
+    },
+    "collection": {
+        "orderBy": "personLastName",
+        "order": "asc",
+        "textFilterFields": [
+            "name",
+            "firstName",
+            "lastName",
+            "user.firstName",
+            "user.lastName",
+            "user.userName"
+        ]
+    }
+}

@@ -1,8 +1,14 @@
 {
     "scopeNames": {
-        "TeamBoard": "Team Board"
+        "TeamBoard": "Team Board",
+        "TeamBoardAssignment": "Assignment",
+        "TeamBoardMember": "Board Member",
+        "TeamBoardSquad": "Board Team"
     },
     "scopeNamesPlural": {
-        "TeamBoard": "Team Board"
+        "TeamBoard": "Team Board",
+        "TeamBoardAssignment": "Assignments",
+        "TeamBoardMember": "Board Members",
+        "TeamBoardSquad": "Board Teams"
     }
 }

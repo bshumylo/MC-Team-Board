@@ -1,0 +1,5 @@
+{
+    "itemViews": {
+        "TeamBoardDraftReminder": "team-board:views/notification/items/draft-reminder"
+    }
+}

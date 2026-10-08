@@ -1,11 +1,12 @@
 {
     "module": "TeamBoard",
     "name": "MC Team Board",
-    "description": "Kanban-style board of teams with member positions and drag-and-drop management.",
+    "version": "2.0.0",
+    "description": "Kanban-style board of teams with member positions and drag-and-drop management. Keeps members' dashlet settings in line with their teams after a rotation.",
     "author": "bshumylo",
     "bundled": true,
     "acceptableVersions": [
-        ">=9.3.0"
+        ">=10.0.8"
     ],
     "php": [
         ">=8.3"

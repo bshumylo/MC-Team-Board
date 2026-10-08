@@ -12,7 +12,10 @@ use Espo\Modules\TeamBoard\Tools\Board\Service;
 /**
  * POST TeamBoard/removeMember
  *
- * Payload: {userId, teamId}.
+ * Payload: {userId, teamId, viewDate}. viewDate is the board's currently
+ * viewed as-of date; the service rejects it when it is not today, since
+ * this legacy path performs a real, present-tense CRM unrelate with no
+ * dated-plan support (see Tools\Board\Service::removeMember).
  * Removes a user from a team (drag-out on the board).
  *
  * @noinspection PhpUnused
@@ -27,6 +30,7 @@ class PostRemoveMember implements Action
 
         $userId = $body->userId ?? null;
         $teamId = $body->teamId ?? null;
+        $viewDate = $body->viewDate ?? null;
 
         if (!is_string($userId) || $userId === '') {
             throw new BadRequest("Bad userId.");
@@ -36,7 +40,11 @@ class PostRemoveMember implements Action
             throw new BadRequest("Bad teamId.");
         }
 
-        $data = $this->service->removeMember($userId, $teamId);
+        if ($viewDate !== null && !is_string($viewDate)) {
+            throw new BadRequest("Bad viewDate.");
+        }
+
+        $data = $this->service->removeMember($userId, $teamId, $viewDate);
 
         return ResponseComposer::json($data);
     }

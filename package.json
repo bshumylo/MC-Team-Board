@@ -1,19 +1,9 @@
 {
   "name": "MC-Team-Board",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "scripts": {
-    "sa": "vendor/bin/phpstan",
-    "unit-tests": "vendor/bin/phpunit",
-    "integration-tests": "node build --copy && node build --composer-install && cd site && php vendor/bin/phpunit tests/integration/Espo/Modules/TeamBoard",
-    "copy": "node build --copy",
-    "composer-install": "node build --composer-install",
-    "sync": "node build --copy && node build --composer-install",
-    "extension": "node build --extension",
-    "clear-cache": "php site/clear_cache.php",
-    "rebuild": "node build --rebuild",
-    "all": "node build --all",
-    "prepare-test": "node build --prepare-test"
+    "extension": "node build --extension"
   },
   "type": "module",
   "author": "bshumylo",
@@ -24,5 +14,11 @@
   "engines": {
     "npm": ">=8",
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-decorators": "^7.29.7",
+    "@babel/plugin-transform-modules-amd": "^7.29.7",
+    "@babel/plugin-transform-typescript": "^7.29.7",
+    "@babel/preset-env": "^7.29.7"
   }
 }

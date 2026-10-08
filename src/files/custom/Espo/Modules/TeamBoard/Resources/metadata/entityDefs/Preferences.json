@@ -20,6 +20,43 @@
             "layoutMassUpdateDisabled": true,
             "customizationDisabled": true,
             "utility": true
+        },
+        "teamBoardColumnSpans": {
+            "type": "jsonObject",
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "customizationDisabled": true,
+            "utility": true
+        },
+        "teamBoardColumnHeights": {
+            "type": "jsonObject",
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "customizationDisabled": true,
+            "utility": true
+        },
+        "teamBoardColumnWidths": {
+            "type": "jsonObject",
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "customizationDisabled": true,
+            "utility": true
+        },
+        "teamBoardViewMode": {
+            "type": "varchar",
+            "maxLength": 16,
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "customizationDisabled": true,
+            "utility": true
+        },
+        "teamBoardOriginMode": {
+            "type": "varchar",
+            "maxLength": 16,
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "customizationDisabled": true,
+            "utility": true
         }
     }
 }

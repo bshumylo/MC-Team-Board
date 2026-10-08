@@ -49,37 +49,47 @@ class Position
     }
 
     /**
-     * The top (exclusive) position — the first one in the list,
-     * not counting Supervisor, which is a special out-of-hierarchy position.
+     * Whether a position may be held by only one person at a time.
+     *
+     * Exclusivity follows the order of the team's list, not position names
+     * (T08, changed 2026-09-25): positions 1-3 are exclusive, except the last
+     * position of the list, which is always the shared ordinary rank. The
+     * first position (Supervisor or any other name) is exclusive too.
+     * Positions from the 4th on are shared. Taking an exclusive position over
+     * splits the previous holder's history and demotes them; existing data
+     * with several holders is not rewritten by this check.
      *
      * @param string[] $list
      */
-    public static function topOf(array $list): ?string
+    public static function isExclusive(array $list, string $position): bool
     {
-        foreach ($list as $item) {
-            if ($item !== self::SUPERVISOR) {
-                return $item;
-            }
+        if ($position === '') {
+            return false;
         }
 
-        return null;
+        $list = self::listFor($list);
+        $index = array_search($position, $list, true);
+
+        if ($index === false) {
+            return false;
+        }
+
+        return $index < 3 && $index !== count($list) - 1;
     }
 
     /**
-     * The bottom position — the default one for new members.
+     * The bottom position — the default one for new members and the one a
+     * demoted holder of an exclusive position moves to.
+     *
+     * It is the last position of the team's list, decided by order and not
+     * by name (T08, U16): the last position is always the ordinary rank.
      *
      * @param string[] $list
      */
     public static function bottomOf(array $list): string
     {
-        $withoutSupervisor = array_values(
-            array_filter($list, fn ($item) => $item !== self::SUPERVISOR)
-        );
+        $list = self::listFor($list);
 
-        if ($withoutSupervisor !== []) {
-            return end($withoutSupervisor);
-        }
-
-        return $list !== [] ? end($list) : self::MEMBER;
+        return (string) end($list);
     }
 }

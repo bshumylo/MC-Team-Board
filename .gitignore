@@ -12,3 +12,8 @@
 /.idea/
 /.vscode/
 SECURITY-AUDIT.md
+/docker/.composer-cache
+
+# Generated extension staging and local browser state
+/.deploy/
+/.superpowers/

@@ -1,0 +1,29 @@
+{
+    "fields": {
+        "team": "EspoCRM Team",
+        "name": "Board Team Name",
+        "colourKey": "Colour",
+        "positionList": "Positions",
+        "isArchived": "Archived",
+        "createdAt": "Created At",
+        "modifiedAt": "Modified At",
+        "createdBy": "Created By",
+        "modifiedBy": "Modified By"
+    },
+    "links": {
+        "team": "EspoCRM Team",
+        "createdBy": "Created By",
+        "modifiedBy": "Modified By"
+    },
+    "options": {
+        "colourKey": {
+            "slate": "Slate",
+            "blue": "Blue",
+            "teal": "Teal",
+            "green": "Green",
+            "amber": "Amber",
+            "rose": "Rose",
+            "violet": "Violet"
+        }
+    }
+}

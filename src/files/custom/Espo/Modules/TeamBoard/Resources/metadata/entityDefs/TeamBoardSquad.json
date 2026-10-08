@@ -1,0 +1,76 @@
+{
+    "fields": {
+        "team": {
+            "type": "link"
+        },
+        "visibilityTransitions": {
+            "type": "linkMultiple"
+        },
+        "name": {
+            "type": "varchar",
+            "maxLength": 150
+        },
+        "colourKey": {
+            "type": "enum",
+            "options": ["slate", "blue", "teal", "green", "amber", "rose", "violet"],
+            "default": "slate",
+            "required": true
+        },
+        "positionList": {
+            "type": "array"
+        },
+        "isArchived": {
+            "type": "bool",
+            "default": false,
+            "required": true
+        },
+        "createdAt": {
+            "type": "datetime",
+            "readOnly": true
+        },
+        "modifiedAt": {
+            "type": "datetime",
+            "readOnly": true
+        },
+        "createdBy": {
+            "type": "link",
+            "readOnly": true
+        },
+        "modifiedBy": {
+            "type": "link",
+            "readOnly": true
+        }
+    },
+    "links": {
+        "team": {
+            "type": "belongsTo",
+            "entity": "Team"
+        },
+        "visibilityTransitions": {
+            "type": "hasMany",
+            "entity": "TeamBoardSquadVisibility",
+            "foreign": "boardSquad"
+        },
+        "createdBy": {
+            "type": "belongsTo",
+            "entity": "User"
+        },
+        "modifiedBy": {
+            "type": "belongsTo",
+            "entity": "User"
+        }
+    },
+    "indexes": {
+        "teamId": {
+            "type": "unique",
+            "columns": ["teamId"]
+        },
+        "archive": {
+            "columns": ["isArchived"]
+        }
+    },
+    "collection": {
+        "orderBy": "createdAt",
+        "order": "asc"
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "fields": {
+        "team": "Команда EspoCRM",
+        "name": "Назва команди на дошці",
+        "colourKey": "Колір",
+        "positionList": "Посади",
+        "isArchived": "Архівовано",
+        "createdAt": "Створено",
+        "modifiedAt": "Змінено",
+        "createdBy": "Створив",
+        "modifiedBy": "Змінив"
+    },
+    "links": {
+        "team": "Команда EspoCRM",
+        "createdBy": "Створив",
+        "modifiedBy": "Змінив"
+    },
+    "options": {
+        "colourKey": {
+            "slate": "Сланцевий",
+            "blue": "Синій",
+            "teal": "Бірюзовий",
+            "green": "Зелений",
+            "amber": "Бурштиновий",
+            "rose": "Рожевий",
+            "violet": "Фіолетовий"
+        }
+    }
+}

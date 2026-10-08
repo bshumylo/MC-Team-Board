@@ -1,0 +1,157 @@
+{
+    "fields": {
+        "member": {
+            "type": "link"
+        },
+        "team": {
+            "type": "link"
+        },
+        "boardMember": {
+            "type": "link"
+        },
+        "boardSquad": {
+            "type": "link"
+        },
+        "position": {
+            "type": "varchar",
+            "maxLength": 100,
+            "required": true
+        },
+        "dateFrom": {
+            "type": "date",
+            "required": true
+        },
+        "dateTo": {
+            "type": "date"
+        },
+        "status": {
+            "type": "enum",
+            "options": ["draft", "confirmed"],
+            "default": "draft",
+            "required": true,
+            "style": {
+                "confirmed": "success"
+            }
+        },
+        "note": {
+            "type": "text"
+        },
+        "appliedAt": {
+            "type": "datetime",
+            "readOnly": true
+        },
+        "endedAt": {
+            "type": "datetime",
+            "readOnly": true
+        },
+        "actualDateFrom": {
+            "type": "date",
+            "readOnly": true
+        },
+        "actualDateTo": {
+            "type": "date",
+            "readOnly": true
+        },
+        "reminderUserIds": {
+            "type": "jsonArray",
+            "readOnly": true,
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "customizationDisabled": true,
+            "utility": true
+        },
+        "displacementEffects": {
+            "type": "jsonArray",
+            "readOnly": true,
+            "layoutDetailDisabled": true,
+            "layoutMassUpdateDisabled": true,
+            "customizationDisabled": true,
+            "utility": true
+        },
+        "isCrmState": {
+            "type": "bool",
+            "default": false,
+            "readOnly": true
+        },
+        "crmIsActive": {
+            "type": "bool",
+            "default": true,
+            "readOnly": true
+        },
+        "supersededDateTo": {
+            "type": "date",
+            "readOnly": true
+        },
+        "createdAt": {
+            "type": "datetime",
+            "readOnly": true
+        },
+        "modifiedAt": {
+            "type": "datetime",
+            "readOnly": true
+        }
+    },
+    "links": {
+        "member": {
+            "type": "belongsTo",
+            "entity": "User"
+        },
+        "team": {
+            "type": "belongsTo",
+            "entity": "Team"
+        },
+        "boardMember": {
+            "type": "belongsTo",
+            "entity": "TeamBoardMember"
+        },
+        "boardSquad": {
+            "type": "belongsTo",
+            "entity": "TeamBoardSquad"
+        },
+        "supersedes": {
+            "type": "belongsTo",
+            "entity": "TeamBoardAssignment",
+            "foreignName": "id"
+        },
+        "displacedBy": {
+            "type": "belongsTo",
+            "entity": "TeamBoardAssignment",
+            "foreignName": "id"
+        },
+        "createdBy": {
+            "type": "belongsTo",
+            "entity": "User"
+        },
+        "modifiedBy": {
+            "type": "belongsTo",
+            "entity": "User"
+        }
+    },
+    "collection": {
+        "orderBy": "dateFrom",
+        "order": "desc"
+    },
+    "indexes": {
+        "teamPeriod": {
+            "columns": ["teamId", "dateFrom", "dateTo"]
+        },
+        "memberPeriod": {
+            "columns": ["memberId", "dateFrom", "dateTo"]
+        },
+        "boardMemberPeriod": {
+            "columns": ["boardMemberId", "dateFrom", "dateTo"]
+        },
+        "boardSquadPeriod": {
+            "columns": ["boardSquadId", "dateFrom", "dateTo"]
+        },
+        "dueApplication": {
+            "columns": ["status", "dateFrom", "appliedAt"]
+        },
+        "dueEnding": {
+            "columns": ["status", "dateTo", "endedAt"]
+        },
+        "displacementOrigin": {
+            "columns": ["displacedById"]
+        }
+    }
+}

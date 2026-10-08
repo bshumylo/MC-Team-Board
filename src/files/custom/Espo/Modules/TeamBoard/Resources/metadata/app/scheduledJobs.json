@@ -1,0 +1,14 @@
+{
+    "TeamBoardApplyDueAssignments": {
+        "name": "Team Board: apply due assignments",
+        "scheduling": "10 0 * * *",
+        "isDefault": true,
+        "jobClassName": "Espo\\Modules\\TeamBoard\\Jobs\\ApplyDueAssignments"
+    },
+    "TeamBoardCleanupMissedDrafts": {
+        "name": "Team Board: clean up missed drafts",
+        "scheduling": "20 0 * * *",
+        "isDefault": true,
+        "jobClassName": "Espo\\Modules\\TeamBoard\\Jobs\\CleanupMissedDrafts"
+    }
+}

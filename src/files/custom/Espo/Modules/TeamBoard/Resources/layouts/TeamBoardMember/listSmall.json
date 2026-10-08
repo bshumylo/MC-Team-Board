@@ -1,0 +1,5 @@
+[
+    {"name": "personFirstName", "link": true},
+    {"name": "personLastName", "link": true},
+    {"name": "origin"}
+]
