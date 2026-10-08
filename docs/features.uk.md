@@ -70,6 +70,8 @@ npm ci
 npm run extension      # створює build/team-board-2.0.0.zip
 ```
 
+Якщо npm відмовляється завантажувати інструменти збірки з GitHub (`Fetching packages of type "git" have been disabled`), виконайте `npm ci --allow-git=all` замість `npm ci`.
+
 ## Заплановані завдання
 
 | Завдання (щодня) | Призначення |
