@@ -1,0 +1,16 @@
+{
+    "name": "espocrm/ext-team-board",
+    "require": {
+        "php": ">=8.3"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Espo\\Modules\\TeamBoard\\": "src/files/custom/Espo/Modules/TeamBoard",
+            "tests\\unit\\Espo\\Modules\\TeamBoard\\": "tests/unit/Espo/Modules/TeamBoard"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.5",
+        "phpstan/phpstan": "^2.1"
+    }
+}

@@ -3,7 +3,17 @@
   "version": "2.0.0",
   "description": "",
   "scripts": {
-    "extension": "node build --extension"
+    "sa": "vendor/bin/phpstan",
+    "unit-tests": "vendor/bin/phpunit",
+    "integration-tests": "node build --copy && node build --composer-install && cd site && php vendor/bin/phpunit tests/integration/Espo/Modules/TeamBoard",
+    "copy": "node build --copy",
+    "composer-install": "node build --composer-install",
+    "sync": "node build --copy && node build --composer-install",
+    "extension": "node build --extension",
+    "clear-cache": "php site/clear_cache.php",
+    "rebuild": "node build --rebuild",
+    "all": "node build --all",
+    "prepare-test": "node build --prepare-test"
   },
   "type": "module",
   "author": "bshumylo",
