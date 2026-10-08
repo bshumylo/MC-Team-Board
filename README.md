@@ -6,7 +6,7 @@ English · [Українська](README.uk.md)
 
 Version **2.0.0** · EspoCRM **10.0.8+** · PHP **8.3+** · AGPL-3.0
 
-<!-- SCREENSHOT: the board (wide screen) -->
+![The board: all teams on one screen](docs/screenshots/en/01-board.png)
 
 ## What you can do
 
@@ -18,7 +18,9 @@ Version **2.0.0** · EspoCRM **10.0.8+** · PHP **8.3+** · AGPL-3.0
 - **Control access.** Admins, editors and read-only viewers; everyone else is kept out.
 - **Work anywhere.** English and Ukrainian interface, follows your EspoCRM theme, works on phones.
 
-<!-- SCREENSHOT: person card with History -->
+![Person card with History](docs/screenshots/en/02-person-history.png)
+
+<img src="docs/screenshots/en/03-mobile.png" alt="Narrow screen: single-column board" width="320">
 
 ## Install
 
