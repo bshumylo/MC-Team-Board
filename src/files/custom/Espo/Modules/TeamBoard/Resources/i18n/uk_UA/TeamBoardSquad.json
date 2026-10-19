@@ -1,6 +1,6 @@
 {
     "fields": {
-        "team": "Команда EspoCRM",
+        "team": "Системна команда",
         "name": "Назва команди на дошці",
         "colourKey": "Колір",
         "positionList": "Посади",
@@ -11,7 +11,7 @@
         "modifiedBy": "Змінив"
     },
     "links": {
-        "team": "Команда EspoCRM",
+        "team": "Системна команда",
         "createdBy": "Створив",
         "modifiedBy": "Змінив"
     },
