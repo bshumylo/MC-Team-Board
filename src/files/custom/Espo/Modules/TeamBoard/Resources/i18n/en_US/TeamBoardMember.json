@@ -1,6 +1,6 @@
 {
     "fields": {
-        "user": "EspoCRM User",
+        "user": "System User",
         "name": "Board Name",
         "photo": "Board Photo",
         "isArchived": "Archived",
@@ -13,7 +13,7 @@
         "origin": "Origin"
     },
     "links": {
-        "user": "EspoCRM User",
+        "user": "System User",
         "createdBy": "Created By",
         "modifiedBy": "Modified By"
     },
