@@ -1,7 +1,7 @@
 import View from 'view';
 
 /**
- * Team Board — kanban-style board of teams.
+ * Team Board — see who works in which team on any date. Plan changes ahead with drag and drop.
  *
  * Columns are teams; cards are team members grouped by their position
  * within the team (stored in the Team-User relationship). The position
