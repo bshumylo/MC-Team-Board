@@ -1,6 +1,6 @@
 {
     "fields": {
-        "team": "EspoCRM Team",
+        "team": "System Team",
         "name": "Board Team Name",
         "colourKey": "Colour",
         "positionList": "Positions",
@@ -11,7 +11,7 @@
         "modifiedBy": "Modified By"
     },
     "links": {
-        "team": "EspoCRM Team",
+        "team": "System Team",
         "createdBy": "Created By",
         "modifiedBy": "Modified By"
     },
