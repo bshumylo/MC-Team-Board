@@ -2,7 +2,7 @@
     "module": "TeamBoard",
     "name": "MC Team Board",
     "version": "2.0.0",
-    "description": "Kanban-style board of teams with member positions and drag-and-drop management. Keeps members' dashlet settings in line with their teams after a rotation.",
+    "description": "A Team board: see who works in which team on any date. Plan changes ahead with drag and drop.",
     "author": "bshumylo",
     "bundled": true,
     "acceptableVersions": [
