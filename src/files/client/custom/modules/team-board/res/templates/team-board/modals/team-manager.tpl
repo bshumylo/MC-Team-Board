@@ -1,7 +1,7 @@
 <style>
-    .tb-team-manager .form-group { margin-bottom: 16px; }
-    .tb-team-manager .record-container { margin-top: 8px; }
-    .tb-team-colour-picker { display: flex; gap: 4px; }
+    .tb-team-colour-picker { display: flex; flex-wrap: wrap; gap: 4px; }
+    /* In the form the dots sit on the line of the neighbouring name input (C09 №8). */
+    .tb-team-colour-field { min-height: var(--input-height-base, 2.25rem); align-items: center; }
     .tb-colour-dot { width: 18px; height: 18px; padding: 0; border: 2px solid transparent; border-radius: 50%; }
     .tb-colour-dot.is-selected { border-color: var(--text-color, #333); }
     .tb-colour-dot--slate { background: #6b7280; }
@@ -18,22 +18,19 @@
     .tb-colour-dot--purple { background: #a855f7; }
     .tb-colour-dot--indigo { background: #6366f1; }
 </style>
-<div class="panel panel-default tb-team-manager">
-    <div class="panel-heading"><strong>{{#if formVisible}}{{#if teamId}}{{teamName}}{{else}}{{newTeamLabel}}{{/if}}{{else}}{{manageTeamsLabel}}{{/if}}</strong></div>
-    <div class="panel-body">
-        {{#if formVisible}}
-        {{#unless editingLinked}}<p class="text-muted small">{{boardOnlyDescription}}</p>{{/unless}}
-        <div class="record-container no-side-margin">{{{teamRecord}}}</div>
-        {{/if}}
-    </div>
-</div>
+{{#if formVisible}}
+<p class="text-muted small">{{formHint}}</p>
+<div class="record-container no-side-margin">{{{teamRecord}}}</div>
+{{else}}
 <table class="table table-striped">
-    <thead><tr><th>{{teamNameLabel}}</th><th>{{colourLabel}}</th></tr></thead>
+    <thead><tr><th>{{teamNameLabel}}</th><th>{{colourLabel}}</th><th>{{teamTypeLabel}}</th></tr></thead>
     <tbody>{{#each teams}}<tr>
-        <td><a role="button" data-action="editTeam" data-id="{{boardSquadId}}">{{name}}</a></td>
-        <td><div class="tb-team-colour-picker" aria-label="{{../colourLabel}}">{{#each colourOptions}}<button type="button" class="tb-colour-dot tb-colour-dot--{{value}}{{#if selected}} is-selected{{/if}}" data-action="setTeamColour" data-id="{{../boardSquadId}}" data-colour-key="{{value}}" title="{{value}}"></button>{{/each}}</div></td>
+        <td>{{#if isEspoTeam}}{{#if teamLink}}<a href="{{teamLink}}" data-action="openSystemTeam">{{name}}</a>{{else}}{{name}}{{/if}}{{else}}<a role="button" data-action="editTeam" data-id="{{boardSquadId}}">{{name}}</a>{{/if}}</td>
+        <td><div class="tb-team-colour-picker" aria-label="{{../colourLabel}}">{{#each colourOptions}}<button type="button" class="tb-colour-dot tb-colour-dot--{{value}}{{#if selected}} is-selected{{/if}}" data-action="setTeamColour" data-id="{{../boardSquadId}}" data-colour-key="{{value}}" aria-label="{{value}}"></button>{{/each}}</div></td>
+        <td>{{typeLabel}}</td>
     </tr>{{/each}}</tbody>
 </table>
 <button class="btn btn-default" data-action="showArchive">{{archiveListLabel}}</button>
 {{#if archivedTeams}}<table class="table table-condensed"><tbody>{{#each archivedTeams}}<tr><td>{{name}}</td><td><button class="btn btn-link" data-action="restoreTeam" data-id="{{id}}">{{../restoreLabel}}</button></td></tr>{{/each}}</tbody></table>{{/if}}
 <p class="text-muted small">{{historyLabel}}</p>
+{{/if}}

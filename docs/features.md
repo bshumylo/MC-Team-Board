@@ -30,7 +30,7 @@ The board shows every team as a card with its members and their positions (by de
 
 ### Working on the board
 
-- **Drag a person** to another team or position, or into Reserve; **drag a team card header** to reorder cards. Cancelling a drag changes nothing.
+- **Drag a person** to another team or position, or into Reserve, or click **+** in an empty position and pick someone from Reserve; **drag a team card header** to reorder cards. Cancelling a drag changes nothing.
 - **Resize cards** the same way as dashlets on the EspoCRM Home page. Card order and sizes are personal (stored in the user's preferences); **Auto arrange teams** resets them.
 - **Manage users** — a native EspoCRM-style list of CRM and board-only people with search, sorting and filters (active, Board only, System, archived). **Manage teams** — create, recolor, archive and restore board-only teams.
 - A photo can be added, cropped, replaced or removed for board-only people; a CRM user's own photo always takes priority and is never changed.
@@ -51,7 +51,7 @@ Denied actions return a clear message in the user's language. Writing to a CRM u
 
 ## Requirements
 
-- EspoCRM 10.0.8 or later (tested on 10.0.8 and 10.0.9)
+- EspoCRM 10.0.8 or later (tested on 10.0.8, 10.0.9 and 10.0.10)
 - PHP 8.3 or later
 - Cron configured for EspoCRM (the extension adds two scheduled jobs)
 
@@ -67,7 +67,7 @@ Version 2 installs over version 1. Existing data is kept and linked to the new r
 
 ```bash
 npm ci
-npm run extension      # creates build/team-board-2.0.0.zip
+npm run extension      # creates build/team-board-2.1.0.zip
 ```
 
 If npm refuses to fetch the build tools from GitHub (`Fetching packages of type "git" have been disabled`), run `npm ci --allow-git=all` instead of `npm ci`.

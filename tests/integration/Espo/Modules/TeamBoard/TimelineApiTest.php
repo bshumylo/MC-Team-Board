@@ -49,19 +49,28 @@ class TimelineApiTest extends BaseTestCase
         $team = $this->createTeam('Timeline');
         $member = $this->createMember('timeline.one');
 
+        // Dates are relative to the CRM's today (the editor may only plan the future).
+        $today = new \DateTimeImmutable(
+            $this->getContainer()->getByClass(\Espo\Core\Utils\DateTime::class)->getToday()->toString()
+        );
+        $from = $today->modify('+30 days')->format('Y-m-d');
+        $until = $today->modify('+90 days')->format('Y-m-d');
+        $rangeFrom = $today->modify('-120 days')->format('Y-m-d');
+        $rangeTo = $today->modify('+240 days')->format('Y-m-d');
+
         $service = $this->createService();
         $service->createAssignment((object) [
             'memberId' => $member->getId(),
             'teamId' => $team->getId(),
             'position' => Position::MEMBER,
-            'dateFrom' => '2026-10-01',
-            'dateTo' => '2026-12-01',
+            'dateFrom' => $from,
+            'dateTo' => $until,
             'status' => Status::CONFIRMED,
         ]);
 
-        $before = $service->getTimeline('2026-09-01', '2026-06-01', '2027-03-01');
-        $during = $service->getTimeline('2026-10-15', '2026-06-01', '2027-03-01');
-        $after = $service->getTimeline('2026-12-01', '2026-06-01', '2027-03-01');
+        $before = $service->getTimeline($today->format('Y-m-d'), $rangeFrom, $rangeTo);
+        $during = $service->getTimeline($today->modify('+45 days')->format('Y-m-d'), $rangeFrom, $rangeTo);
+        $after = $service->getTimeline($until, $rangeFrom, $rangeTo);
 
         $this->assertSame([], $this->membersOf($before, $team->getId()));
         $this->assertSame([$member->getId()], $this->membersOf($during, $team->getId()));

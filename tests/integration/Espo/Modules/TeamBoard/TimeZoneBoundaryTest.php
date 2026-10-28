@@ -33,7 +33,8 @@ use tests\integration\Core\BaseTestCase;
  * Each job is given two fixtures dated relative to the CRM-local "today":
  * one at CRM-local today, one at CRM-local yesterday (Cleanup) / tomorrow
  * (Apply). Whichever branch is picked, exactly one of the two fixtures lands
- * on a date a UTC-clock "today" would score the opposite way. Both
+ * on a date a UTC-clock "today" would score the opposite way — see the
+ * per-branch table in `agent-work/sdd/finish-v2/task-2-report.md`. Both
  * fixtures are still asserted every run, so the test also documents the
  * plain (non-divergent) half of each requirement.
  */

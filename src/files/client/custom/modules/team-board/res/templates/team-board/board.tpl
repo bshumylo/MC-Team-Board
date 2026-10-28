@@ -93,11 +93,6 @@
         cursor: se-resize;
         z-index: 3;
     }
-    .tb-board-menu > .btn {
-        width: 32px;
-        height: 32px;
-        padding: 5px 8px;
-    }
     .tb-board-menu .dropdown-menu {
         width: max-content;
         max-width: min(360px, calc(100vw - 20px));
@@ -191,13 +186,22 @@
         font-weight: normal;
         color: var(--text-muted-color, #969696);
     }
+    /* U23: as wide as the date it shows (dd.mm.yyyy / mm/dd/yyyy), no empty
+       space on the right. The native calendar indicator is hidden (it is
+       near-invisible in the dark theme and only takes space); a click on the
+       control still opens the calendar (openDatePicker/showPicker) and the
+       date can still be typed. */
     .tb-as-of-input {
-        width: 142px;
+        width: auto;
+        field-sizing: content;
         height: 30px !important;
         padding: 4px 8px;
         border: 0;
         background: transparent;
         box-shadow: none;
+    }
+    .tb-as-of-input::-webkit-calendar-picker-indicator {
+        display: none;
     }
     .tb-date-control {
         display: inline-flex;
@@ -241,6 +245,35 @@
         opacity: 0.45;
         cursor: default;
     }
+    /* U14: the empty header circle of a board manager carries the same "+"
+       as every other empty position. No opacity here: it would fade the
+       Reserve list opened from it. */
+    .team-board .tb-sup.tb-sup-vacancy {
+        opacity: 1;
+        border-color: var(--default-border-color, #e0e2e3);
+    }
+    .team-board .tb-sup-vacancy > .dropdown-toggle {
+        display: inline-flex;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        color: var(--link-color, #5589ca);
+        line-height: 1;
+    }
+    .team-board .tb-sup-vacancy > .dropdown-toggle > .fas {
+        width: auto;
+        font-size: 10px;
+        line-height: 1;
+    }
+    /* U22: the Reserve list of a "+" has a bounded height and scrolls. */
+    .team-board .tb-vacancy-menu {
+        max-height: 360px;
+        overflow-y: auto;
+    }
     .team-board .tb-sup[draggable="true"] {
         cursor: grab;
     }
@@ -262,10 +295,6 @@
         right: -5px;
         bottom: -5px;
         z-index: 2;
-    }
-    .team-board .tb-chev {
-        display: none;
-        opacity: 0.5;
     }
     .team-board .tb-col-menu > .btn {
         padding: 2px 5px;
@@ -289,10 +318,14 @@
         flex: 1 1 auto;
         overflow: hidden;
     }
+    /* Centred without a transform: a transformed ancestor would become the
+       containing block of the header "+" list (position: fixed, U22). */
     .team-board .tb-col-head.tb-sup-centred .tb-sups {
         position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
+        left: 0;
+        right: 0;
+        width: max-content;
+        margin: 0 auto;
     }
     .team-board .tb-col-head.tb-sup-inline .tb-sups {
         position: static;
@@ -465,7 +498,7 @@
         display: flex;
     }
     .tb-mode-photos .tb-role-slot.tb-over,
-    .tb-mode-photos .tb-reserve.tb-over {
+    .tb-mode-photos .tb-reserve.tb-over > .tb-reserve-frame {
         outline: 2px dashed var(--brand-primary, #5589ca);
         outline-offset: -2px;
     }
@@ -626,19 +659,29 @@
         text-align: center;
     }
     .tb-mode-photos .tb-board-only { position: absolute; right: -4px; bottom: -4px; z-index: 3; padding: 3px; border-radius: 50%; background: var(--panel-bg, #fff); color: var(--text-muted-color, #777); font-size: 11px; line-height: 1; }
+    /* U11: Reserve is a separate zone — the gap above it is about three grid
+       gaps (12px board gap + 24px), its heading stands above the dashed
+       frame, and it still sits at the bottom of a short screen. The whole
+       section (heading and frame) is the drop target. */
     .tb-mode-photos .tb-reserve {
         grid-column: 1 / -1;
         margin-top: auto;
+        padding-top: 24px;
+    }
+    .tb-mode-photos .tb-reserve-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 6px;
+        margin: 0 0 6px;
+        padding: 0 2px;
+    }
+    .tb-mode-photos .tb-reserve-frame {
+        margin: 0;
         padding: 10px;
         border: 1px dashed var(--default-border-color, #e0e2e3);
         border-radius: var(--panel-border-radius, 6px);
         background: var(--panel-bg, transparent);
-    }
-    .tb-mode-photos .tb-reserve-head {
-        display: flex;
-        align-items: baseline;
-        gap: 6px;
-        margin-bottom: 8px;
     }
     .tb-mode-photos .tb-reserve-count {
         color: var(--text-muted-color, #969696);
@@ -677,6 +720,15 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         pointer-events: none;
+    }
+    /* 2.1.0 D1: in Photos the label under the avatar is the only origin
+       label, as in the role slots. The List copy sits in .tb-info, which
+       covers the photo here, so it is hidden; outside Photos it is the only one. */
+    .tb-mode-photos .tb-draft-origin {
+        display: none;
+    }
+    .team-board:not(.tb-mode-photos) .tb-draft-origin-tag {
+        display: none;
     }
     .team-board .tb-drop {
         border: 1px dashed;
@@ -806,18 +858,6 @@
         .team-board .tb-col {
             width: 100%;
         }
-        .team-board .tb-chev {
-            display: inline-block;
-        }
-        .team-board .tb-col-head {
-            cursor: pointer;
-        }
-        .team-board .tb-col.tb-collapsed .tb-col-body {
-            display: none;
-        }
-        .team-board .tb-col.tb-collapsed .tb-chev {
-            transform: rotate(-90deg);
-        }
         .team-board.tb-mode-photos .tb-col {
             width: auto;
         }
@@ -849,11 +889,11 @@
     <div class="btn-group tb-board-menu">
         <button
             type="button"
-            class="btn btn-default dropdown-toggle"
+            class="btn btn-text btn-icon dropdown-toggle"
             data-toggle="dropdown"
             title="{{boardMenuLabel}}"
             aria-label="{{boardMenuLabel}}"
-        ><span class="fas fa-ellipsis-v"></span></button>
+        ><span class="fas fa-ellipsis-h"></span></button>
         <ul class="dropdown-menu pull-right">
             <li><a role="button" tabindex="0" data-action="autoArrange">
                 <span class="fas fa-magic fa-fw"></span> {{autoArrangeLabel}}
@@ -951,7 +991,7 @@
         style="--tb-column-span: {{columnSpan}}; --tb-column-height: {{columnHeight}}; --tb-column-width: {{columnWidth}};"
     >
         <span class="tb-resize-handle" aria-label="{{../resizeTeamLabel}}"></span>
-        <div class="panel-heading tb-col-head" data-action="toggleColumn" draggable="true">
+        <div class="panel-heading tb-col-head" draggable="true">
             <div class="tb-title">
                 <span class="tb-team-name">
                     {{#if isEspoTeam}}<a
@@ -991,7 +1031,35 @@
                 >{{{avatarHtml}}}{{#if showBoardOnly}}<span class="tb-board-only fas fa-unlink" title="{{boardOnlyLabel}}" aria-label="{{boardOnlyLabel}}"></span>{{/if}}</span>{{/if}}
                 {{/each}}
                 {{#unless hasSupervisors}}
+                {{#if canAddToHeader}}
+                <div class="btn-group tb-sup tb-sup-empty tb-sup-vacancy">
+                    <button
+                        type="button"
+                        class="btn btn-link btn-xs dropdown-toggle"
+                        data-toggle="dropdown"
+                        title="{{headerAccessibleLabel}}"
+                        aria-label="{{headerAccessibleLabel}}"
+                    ><span class="fas fa-user-plus" aria-hidden="true"></span></button>
+                    <ul class="dropdown-menu tb-vacancy-menu">
+                        {{#if hasReserve}}
+                        {{#each headerReserveUsers}}
+                        <li><a
+                            role="button"
+                            tabindex="0"
+                            data-action="addFreeUser"
+                            data-user-id="{{id}}"
+                            data-team-id="{{teamId}}"
+                            data-position="{{position}}"
+                        >{{name}}</a></li>
+                        {{/each}}
+                        {{else}}
+                        <li class="disabled"><a>{{../reserveDescription}}</a></li>
+                        {{/if}}
+                    </ul>
+                </div>
+                {{else}}
                 <span class="tb-sup tb-sup-empty"></span>
+                {{/if}}
                 {{/unless}}
             </div>
             {{/if}}
@@ -1027,7 +1095,7 @@
                     class="btn btn-link btn-sm dropdown-toggle"
                     data-toggle="dropdown"
                     title="{{../settingsLabel}}"
-                ><span class="fas fa-ellipsis-v"></span></button>
+                ><span class="fas fa-ellipsis-h"></span></button>
                 <ul class="dropdown-menu pull-right">
                     <li class="dropdown-header">{{../settingsLabel}}</li>
                     {{#each settingsPositions}}
@@ -1044,7 +1112,6 @@
                     {{#if canArchive}}<li class="divider"></li><li><a role="button" tabindex="0" class="text-danger" data-action="archiveTeam" data-team-id="{{boardSquadId}}">{{../archiveTeamLabel}}</a></li>{{/if}}
                 </ul>
             </div>
-            <span class="tb-chev fas fa-chevron-down"></span>
         </div>
         <div class="tb-col-body">
             {{#if photoRoleSlots}}
@@ -1088,7 +1155,7 @@
                                     data-toggle="dropdown"
                                     title="{{name}}"
                                     aria-label="{{name}}"
-                                ><span class="fas fa-ellipsis-v"></span></button>
+                                ><span class="fas fa-ellipsis-h"></span></button>
                                 <ul class="dropdown-menu pull-right">
                                     <li><a role="button" tabindex="0" data-action="openPerson" data-board-member-id="{{boardMemberId}}">{{name}}</a></li>
                                     <li class="divider"></li>
@@ -1139,7 +1206,7 @@
                                 data-toggle="dropdown"
                                 aria-label="{{accessibleLabel}}"
                             ><span class="fas fa-user-plus" aria-hidden="true"></span></button>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu tb-vacancy-menu">
                                 {{#if hasReserve}}
                                 {{#each reserveUsers}}
                                 <li><a
@@ -1209,7 +1276,7 @@
                             type="button"
                             class="btn btn-link btn-sm dropdown-toggle"
                             data-toggle="dropdown"
-                        ><span class="fas fa-ellipsis-v"></span></button>
+                        ><span class="fas fa-ellipsis-h"></span></button>
                         <ul class="dropdown-menu pull-right">
                             <li><a role="button" tabindex="0" data-action="openPerson" data-board-member-id="{{boardMemberId}}">{{name}}</a></li>
                             <li class="divider"></li>
@@ -1251,7 +1318,34 @@
                 </div>
                 {{/each}}
                 {{#if isEmpty}}
+                {{#if canAdd}}
+                <div class="btn-group tb-role-vacancy">
+                    <button
+                        type="button"
+                        class="btn btn-link btn-xs dropdown-toggle"
+                        data-toggle="dropdown"
+                        aria-label="{{accessibleLabel}}"
+                    ><span class="fas fa-user-plus" aria-hidden="true"></span></button>
+                    <ul class="dropdown-menu tb-vacancy-menu">
+                        {{#if hasReserve}}
+                        {{#each reserveUsers}}
+                        <li><a
+                            role="button"
+                            tabindex="0"
+                            data-action="addFreeUser"
+                            data-user-id="{{id}}"
+                            data-team-id="{{teamId}}"
+                            data-position="{{position}}"
+                        >{{name}}</a></li>
+                        {{/each}}
+                        {{else}}
+                        <li class="disabled"><a>{{../../reserveDescription}}</a></li>
+                        {{/if}}
+                    </ul>
+                </div>
+                {{else}}
                 <div class="tb-drop text-muted small" aria-label="{{accessibleLabel}}"></div>
+                {{/if}}
                 {{/if}}
                 </div>
             </div>
@@ -1261,7 +1355,7 @@
     {{/each}}
     </div>
     <section
-        class="tb-reserve panel panel-default"
+        class="tb-reserve"
         data-position="__reserve__"
         aria-label="{{reserveLabel}}"
     >
@@ -1270,6 +1364,7 @@
             <span class="tb-reserve-count">{{reserveCount}}</span>
             <span class="text-muted small">{{reserveDescription}}</span>
         </div>
+        <div class="tb-reserve-frame panel panel-default">
         {{#if reserveMembers}}
         <div class="tb-reserve-members">
             {{#each reserveMembers}}
@@ -1302,7 +1397,7 @@
                         type="button"
                         class="btn btn-link btn-sm dropdown-toggle"
                         data-toggle="dropdown"
-                    ><span class="fas fa-ellipsis-v"></span></button>
+                    ><span class="fas fa-ellipsis-h"></span></button>
                     <ul class="dropdown-menu pull-right">
                         <li><a role="button" tabindex="0" data-action="openPerson" data-board-member-id="{{boardMemberId}}">{{name}}</a></li>
                         {{#if hasMenuTeams}}
@@ -1329,6 +1424,7 @@
         {{else}}
         <div class="tb-reserve-empty">{{reserveDescription}}</div>
         {{/if}}
+        </div>
     </section>
 </div>
 

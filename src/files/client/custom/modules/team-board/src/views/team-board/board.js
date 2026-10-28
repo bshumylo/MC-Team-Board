@@ -20,8 +20,9 @@ import View from 'view';
  * drag & drop onto the empty area outside the columns removes the user
  * from the team (the user record itself is never deleted). Columns themselves can be reordered by
  * dragging their headers; the order is saved per user (Preferences).
- * Per-column position visibility is configurable (gear menu, saved in
- * Preferences); the member counter counts only visible positions.
+ * Per-column position visibility is configurable (the card's "⋯" menu, every
+ * position except the last, saved in Preferences); the member counter counts
+ * only visible positions.
  */
 class TeamBoardView extends View {
 
@@ -32,6 +33,12 @@ class TeamBoardView extends View {
 
     /** Long-press delay in ms before a touch drag starts. */
     TOUCH_DRAG_DELAY = 300
+
+    /** U22: the Reserve list of an empty circle's "+" scrolls above this height. */
+    VACANCY_MENU_MAX_HEIGHT = 360
+
+    /** U23 №2: a typed «as of» date is applied after this pause after the last key. */
+    AS_OF_TYPING_IDLE_MS = 1200
 
     events = {
         /** @this TeamBoardView */
@@ -94,13 +101,30 @@ class TeamBoardView extends View {
         },
         /** @this TeamBoardView */
         'change [data-action="setAsOfDate"]': function (e) {
-            const value = e.currentTarget.value;
+            this.onAsOfDateChange(e.currentTarget);
+        },
+        /** @this TeamBoardView */
+        'keydown [data-action="setAsOfDate"]': function (e) {
+            if (e.key !== 'Enter') {
+                // U23 №2: the next `change` comes from typing.
+                this._asOfKeyboard = true;
 
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
                 return;
             }
 
-            this.goToDate(value);
+            if (this._asOfTyping) {
+                // Apply the typed date; do not also open the calendar of
+                // the control around the field.
+                e.preventDefault();
+                e.stopPropagation();
+                this.commitAsOfDate(e.currentTarget);
+            }
+        },
+        /** @this TeamBoardView */
+        'focusout [data-action="setAsOfDate"]': function (e) {
+            if (this._asOfTyping) {
+                this.commitAsOfDate(e.currentTarget);
+            }
         },
         /** @this TeamBoardView */
         'click [data-action="openDatePicker"]': function (e) {
@@ -339,12 +363,7 @@ class TeamBoardView extends View {
         const teams = this.applyOrder(visibleData.teams).map(team => {
             const positionList = this.teamPositionList(team);
             const togglable = this.togglablePositions(positionList);
-            // U15: any stray "hidden" entry for a non-togglable position
-            // (the header slot, the last/rank-and-file slot, or a 4th+
-            // middle group) is ignored — those can never be hidden, even
-            // if stale preference state from before this fix says so.
-            const hidden = this.getHiddenPositions(team.id)
-                .filter(position => togglable.includes(position));
+            const hidden = this.hiddenPositionsOf(team.id, positionList);
 
             // U16: the header slot is the FIRST position in the team's own
             // order, whatever it is named — never a literal "Supervisor"
@@ -373,6 +392,10 @@ class TeamBoardView extends View {
                     boardOnlyLabel: this.translate('Board only — no EspoCRM account', 'labels', 'TeamBoard'),
                 }));
 
+            // U14: the empty header circle gets the same "+" as every other
+            // empty position, for a board manager only.
+            const canAddToHeader = !!canManage && hasSupervisorPosition && supervisors.length === 0;
+
             const settingsPositions = togglable.map(position => ({
                 value: position,
                 teamId: team.id,
@@ -399,6 +422,12 @@ class TeamBoardView extends View {
                 hasSupervisorPosition: hasSupervisorPosition,
                 headerPosition: headerPosition,
                 supervisorsHidden: hasSupervisorPosition && hidden.includes(headerPosition),
+                canAddToHeader: canAddToHeader,
+                headerReserveUsers: canAddToHeader ?
+                    this.reserveChoices(team, headerPosition, visibleData.reserve) : [],
+                headerAccessibleLabel: hasSupervisorPosition ?
+                    this.translate('Drop here', 'labels', 'TeamBoard') + ' — ' +
+                        this.positionLabelOf(headerPosition) : '',
                 groups: this.composeGroups(team, positionList, hidden, canManage),
                 photoRoleSlots: this.composePhotoRoleSlots(team, positionList, hidden, canManage),
                 canArchive: !team.isEspoTeam && canManage,
@@ -417,14 +446,15 @@ class TeamBoardView extends View {
 
         const reserveMembers = visibleData.reserve
             .map(user => this.composeReserveMember(user, canManage));
+        const header = this.headerCounts(visibleData);
 
         return {
             title: this.translate('Team Board', 'labels', 'TeamBoard'),
-            totalUnique: this.uniqueMemberCount(visibleData),
+            totalUnique: header.unique,
             uniqueLabel: this.translate('Unique members', 'labels', 'TeamBoard'),
-            pendingApprovalCount: this.pendingApprovalCount(visibleData),
-            hasPendingApproval: this.pendingApprovalCount(visibleData) > 0,
-            pendingApprovalLabel: this.pendingApprovalLabelFor(this.pendingApprovalCount(visibleData)),
+            pendingApprovalCount: header.pending,
+            hasPendingApproval: header.pending > 0,
+            pendingApprovalLabel: this.pendingApprovalLabelFor(header.pending),
             boardMenuLabel: this.translate('Board menu', 'labels', 'TeamBoard'),
             autoArrangeLabel: this.translate('Auto arrange', 'labels', 'TeamBoard'),
             manageTeamsLabel: this.translate('Manage teams', 'labels', 'TeamBoard'),
@@ -500,7 +530,8 @@ class TeamBoardView extends View {
                 );
 
                 if (team) {
-                    view.openTeam(team);
+                    // U23: opened from the team name, Save/Cancel return to the board.
+                    view.openTeam(team, {returnToBoard: true});
                 }
             }
         });
@@ -674,6 +705,86 @@ class TeamBoardView extends View {
     }
 
     /**
+     * U15: the hidden positions of one card as the board applies them. A
+     * stray entry for a position that is not togglable (the last/rank-and-file
+     * position, or a name no longer in the list) is ignored — rank-and-file
+     * never hides. `hiddenMap` replaces the saved Preferences (in-place toggle).
+     *
+     * @private
+     * @return {string[]}
+     */
+    hiddenPositionsOf(teamId, positionList, hiddenMap = null) {
+        const togglable = this.togglablePositions(positionList);
+        const saved = hiddenMap ? (hiddenMap[teamId] || []) : this.getHiddenPositions(teamId);
+
+        return saved.filter(position => togglable.includes(position));
+    }
+
+    /**
+     * U02 (2.1.0 D2, user decision 2026-10-24): the page-header counters
+     * count only the people shown on the board for this user — the origin
+     * filter (`data`) and each card's hidden positions, the same rule as the
+     * per-team counter. A person is counted once if shown anywhere; "awaiting
+     * approval" counts the shown people with a pale avatar (pendingPersonIds;
+     * hiding a position does not change who is pale elsewhere).
+     *
+     * @private
+     * @param {{teams: Object[], reserve: Object[]}} data Origin-filtered data.
+     * @param {?Object} hiddenMap
+     * @return {{unique: number, pending: number}}
+     */
+    headerCounts(data = this.visibleTimelineData(), hiddenMap = null) {
+        const shown = {
+            teams: (data.teams || []).map(team => {
+                const positionList = this.teamPositionList(team);
+                const hidden = this.hiddenPositionsOf(team.id, positionList, hiddenMap);
+
+                return {
+                    ...team,
+                    members: (team.members || []).filter(member =>
+                        !hidden.includes(this.normalizePosition(member.position, positionList))),
+                };
+            }),
+            reserve: data.reserve || [],
+        };
+        const shownIds = new Set(shown.reserve.map(user => user.id));
+
+        shown.teams.forEach(team => team.members.forEach(member => shownIds.add(member.id)));
+
+        return {
+            unique: this.uniqueMemberCount(shown),
+            pending: [...this.pendingPersonIds(data)].filter(id => shownIds.has(id)).length,
+        };
+    }
+
+    /**
+     * U02 (2.1.0 D2): redraw the page-header counters in place, as board.tpl
+     * draws them, after a position toggle that does not re-render the board.
+     *
+     * @private
+     * @param {?Object} hiddenMap
+     */
+    updateHeaderCounters(hiddenMap = null) {
+        const total = this.element && this.element.querySelector('.tb-total-text');
+
+        if (!total) {
+            return;
+        }
+
+        const counts = this.headerCounts(this.visibleTimelineData(), hiddenMap);
+
+        total.textContent = `${counts.unique} ${this.translate('Unique members', 'labels', 'TeamBoard')}`;
+
+        if (counts.pending > 0) {
+            const pending = document.createElement('span');
+
+            pending.className = 'tb-pending-approval-text';
+            pending.textContent = `(${this.pendingApprovalLabelFor(counts.pending)})`;
+            total.append(' ', pending);
+        }
+    }
+
+    /**
      * Pluralised "{count} awaiting approval" text: the `...One` form is
      * used for the CLDR "one" category of the user's language (Ukrainian:
      * 1, 21, 31 but not 11); other counts use the base form.
@@ -721,6 +832,8 @@ class TeamBoardView extends View {
     /**
      * U02: count of unique people with a pale avatar (see pendingPersonIds):
      * a Draft in effect or a future Draft plan, visible in a team or Reserve.
+     * The page header uses headerCounts(), which also applies the hidden
+     * positions (2.1.0 D2).
      *
      * @private
      * @return {number}
@@ -817,6 +930,9 @@ class TeamBoardView extends View {
             return;
         }
 
+        // U23 №2: a date picked in the calendar is applied at once.
+        this._asOfKeyboard = false;
+
         input.focus();
 
         if (typeof input.showPicker === 'function') {
@@ -827,6 +943,66 @@ class TeamBoardView extends View {
                 // input's own click. The normal native click still works.
             }
         }
+    }
+
+    /**
+     * U23 №2 (2.1.0 D5): Chrome fires `change` for every edited segment of a
+     * typed date, and applying it reloads the board and replaces the field
+     * (typing "10 28 2026" ended at 2026-01-23). A typed value is applied when
+     * typing is finished: Enter, leaving the field, or AS_OF_TYPING_IDLE_MS
+     * after the last change. A calendar pick (no key before it) applies at once.
+     *
+     * @private
+     * @param {HTMLInputElement} input
+     */
+    onAsOfDateChange(input) {
+        if (!this._asOfKeyboard) {
+            this.commitAsOfDate(input);
+
+            return;
+        }
+
+        clearTimeout(this._asOfTypingTimer);
+        this._asOfTyping = true;
+        this._asOfTypingTimer = setTimeout(
+            () => this.commitAsOfDate(input, true),
+            this.AS_OF_TYPING_IDLE_MS
+        );
+    }
+
+    /**
+     * @private
+     * @param {HTMLInputElement} input
+     * @param {boolean} [idle] A pause, not an explicit Enter/leave/pick.
+     */
+    commitAsOfDate(input, idle = false) {
+        const value = input ? input.value : '';
+
+        // A pause inside the year (0002, 0020, 0202) is not the end of typing;
+        // Enter or leaving the field still applies what was typed.
+        if (idle && !/^[1-9]\d{3}-\d{2}-\d{2}$/.test(value)) {
+            return;
+        }
+
+        this.cancelAsOfTyping();
+
+        if (input && input.isConnected === false) {
+            return;
+        }
+
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || value === this.asOfDate) {
+            return;
+        }
+
+        this.goToDate(value);
+    }
+
+    /** @private */
+    cancelAsOfTyping() {
+        clearTimeout(this._asOfTypingTimer);
+        this._asOfTypingTimer = null;
+        this._asOfTyping = false;
+        this._asOfKeyboard = false;
     }
 
     /**
@@ -1181,8 +1357,10 @@ class TeamBoardView extends View {
             check.classList.toggle('fa-square', i === -1);
         }
 
-        const col = this.element
-            .querySelector(`.tb-col[data-team-id="${teamId}"]`);
+        // The card is the one whose menu was clicked (the menu stays a DOM
+        // descendant of its card even while it is shown as position: fixed).
+        const col = (itemElement.closest && itemElement.closest('.tb-col')) ||
+            this.element.querySelector(`.tb-col[data-team-id="${CSS.escape(teamId)}"]`);
 
         if (!col) {
             return;
@@ -1197,25 +1375,41 @@ class TeamBoardView extends View {
         const isHeaderPosition = !!team &&
             this.headerPositionOf(this.teamPositionList(team)) === position;
 
-        const target = isHeaderPosition ?
-            col.querySelector('.tb-sups') :
-            col.querySelector(`.tb-role-slot[data-position="${CSS.escape(position)}"]`) ||
-            col.querySelector(`.tb-group[data-position="${CSS.escape(position)}"]`);
+        // U15: positions 2-3 have a role slot plus a hidden group copy; a
+        // 4th+ position has its group only. Every container of this position
+        // in this card follows the toggle, as a re-render would draw it.
+        const escaped = CSS.escape(position);
+        const targets = isHeaderPosition ?
+            [col.querySelector('.tb-sups')] :
+            [...col.querySelectorAll(
+                `.tb-role-slot[data-position="${escaped}"], .tb-group[data-position="${escaped}"]`
+            )];
 
-        if (target) {
-            target.classList.toggle('tb-hidden', i === -1);
-        }
+        targets
+            .filter(target => !!target)
+            .forEach(target => target.classList.toggle('tb-hidden', i === -1));
 
         this.syncSoloCommandSlot(col);
 
-        if (team) {
-            const countEl = col.querySelector('.tb-count');
-
-            if (countEl) {
-                countEl.textContent = this.visibleCount(
-                    team, this.teamPositionList(team), hidden);
-            }
+        if (isHeaderPosition) {
+            // The centred/inline header layout depends on the header width.
+            this.positionSupervisors();
         }
+
+        // U02 (2.1.0 D2): the per-team and the page-header counters follow
+        // the same rule as data(): the origin filter and the togglable
+        // hidden positions of the just-saved map.
+        const visibleTeam = this.visibleTimelineData().teams.find(item => item.id === teamId);
+        const countEl = col.querySelector('.tb-count');
+
+        if (visibleTeam && countEl) {
+            const positionList = this.teamPositionList(visibleTeam);
+
+            countEl.textContent = this.visibleCount(
+                visibleTeam, positionList, this.hiddenPositionsOf(teamId, positionList, map));
+        }
+
+        this.updateHeaderCounters(map);
     }
 
     /**
@@ -1227,6 +1421,7 @@ class TeamBoardView extends View {
      */
     composeGroups(team, positionList, hidden, canManage) {
         const top = this.topPosition(positionList);
+        const reserve = this.visibleTimelineData().reserve;
 
         return this.bodyPositions(positionList).map(position => {
             const members = this.sortMembers(
@@ -1235,20 +1430,45 @@ class TeamBoardView extends View {
                 team.id,
                 position
             ).map(member => this.composeMember(member, team, positionList, canManage));
+            const isPhotoRole = this.isPhotoRole(position, positionList);
+            // U14: an empty 4th+ group (and a rank-and-file group placed
+            // after it) gets the same "+" as positions 2-3. The command-row
+            // positions are drawn by their role slot; their group copy here
+            // is a hidden duplicate and needs no second menu.
+            const canAdd = !!canManage && members.length === 0 && !isPhotoRole;
 
             return {
                 position: position,
                 teamId: team.id,
                 isTop: position === top,
-                isPhotoRole: this.isPhotoRole(position, positionList),
+                isPhotoRole: isPhotoRole,
                 isHidden: hidden.includes(position),
                 label: this.positionLabelOf(position),
                 members: members,
                 isEmpty: members.length === 0,
+                canAdd: canAdd,
+                reserveUsers: canAdd ? this.reserveChoices(team, position, reserve) : [],
+                hasReserve: reserve.length > 0,
                 accessibleLabel: this.translate('Drop here', 'labels', 'TeamBoard') +
                     ' — ' + this.positionLabelOf(position),
             };
         });
+    }
+
+    /**
+     * U14: the people offered by an empty circle's "+" — the visible Reserve,
+     * each bound to that team and that circle's position. Choosing one runs
+     * the existing `addFreeUser` → `move()` → assignment dialog path.
+     *
+     * @private
+     */
+    reserveChoices(team, position, reserve = this.visibleTimelineData().reserve) {
+        return reserve.map(user => ({
+            id: user.id,
+            name: user.name,
+            teamId: team.id,
+            position: position,
+        }));
     }
 
     /**
@@ -1285,21 +1505,20 @@ class TeamBoardView extends View {
     }
 
     /**
-     * U15: the "Visible positions" toggle controls positions 2-3 only —
-     * never the header slot (position 1) and never the last/rank-and-file
-     * position, which must always stay visible. When the team has 3 or
-     * fewer positions, positions 2-3 collapse with the last position (e.g.
-     * a 3-position team's only body positions are the command slot and the
-     * rank-and-file slot), so only the ones that are NOT the last position
-     * are togglable.
+     * U15 (2026-10-23): the "Visible positions" toggle controls every
+     * position of the team's list except the last one (rank-and-file), in
+     * list order, including the first (header) position and every 4th+
+     * group. Order decides, never a name (U16): for [Chair, Member, Advisor]
+     * the menu has Chair and Member, not Advisor. A one-position team has
+     * nothing to toggle.
      *
      * @private
      */
     togglablePositions(positionList) {
         const bottom = this.bottomPosition(positionList);
 
-        return this.bodyPositions(positionList)
-            .slice(0, 2)
+        return positionList
+            .slice(0, -1)
             .filter(position => position !== bottom);
     }
 
@@ -1311,6 +1530,7 @@ class TeamBoardView extends View {
      * @private
      */
     composePhotoRoleSlots(team, positionList, hidden, canManage) {
+        const reserve = this.visibleTimelineData().reserve;
         const slots = this.photoRolePositions(positionList)
             .map(position => {
                 const members = this.sortMembers(
@@ -1333,13 +1553,8 @@ class TeamBoardView extends View {
                     // unfiltered preference state.
                     visible: !hidden.includes(position),
                     canManage: canManage,
-                    reserveUsers: this.visibleTimelineData().reserve.map(user => ({
-                        id: user.id,
-                        name: user.name,
-                        teamId: team.id,
-                        position: position,
-                    })),
-                    hasReserve: this.visibleTimelineData().reserve.length > 0,
+                    reserveUsers: this.reserveChoices(team, position, reserve),
+                    hasReserve: reserve.length > 0,
                     accessibleLabel: this.translate('Drop here', 'labels', 'TeamBoard') +
                         ' — ' + this.positionLabelOf(position),
                 };
@@ -1721,9 +1936,10 @@ class TeamBoardView extends View {
                 (count ? count.offsetWidth : 0) + 6;
             const menus = [...head.querySelectorAll('.tb-col-menu')];
             const menuWidth = menus.reduce((total, menu) => total + menu.offsetWidth, 0);
-            // board.tpl centres `.tb-sups` at 50% of the head's own padding
-            // box (`left: 50%; transform: translateX(-50%)` on a
-            // `position: relative` .tb-col-head) -- that coordinate frame
+            // board.tpl centres `.tb-sups` in the head's own padding box
+            // (`left: 0; right: 0; margin: 0 auto` on a `position: relative`
+            // .tb-col-head; no transform, so the header "+" list can be
+            // position: fixed to the viewport) -- that coordinate frame
             // starts at the padding box's left edge, not at the flex
             // content box. So the left-aligned title really starts
             // `paddingLeft` in, and the menu buttons really end
@@ -1798,6 +2014,7 @@ class TeamBoardView extends View {
     onRemove() {
         this._timelineRemoved = true;
         this._timelineGeneration = (this._timelineGeneration || 0) + 1;
+        this.cancelAsOfTyping();
         Espo.Ui.notify(false);
         this.destroyFloatingScrollbar();
 
@@ -1909,8 +2126,11 @@ class TeamBoardView extends View {
         }
 
         container.addEventListener('click', e => {
+            // U22: the "+" of every empty circle (role slots, 4th+ groups,
+            // the header) opens the same unclipped fixed list as the menus.
             const toggle = e.target.closest(
-                '.tb-menu .dropdown-toggle, .tb-col-menu .dropdown-toggle');
+                '.tb-menu .dropdown-toggle, .tb-col-menu .dropdown-toggle, ' +
+                '.tb-role-vacancy .dropdown-toggle, .tb-sup-vacancy .dropdown-toggle');
 
             if (!toggle) {
                 return;
@@ -1928,11 +2148,17 @@ class TeamBoardView extends View {
                 menu.style.maxHeight = '';
                 menu.style.overflowY = '';
 
+                const isVacancy = group.classList.contains('tb-role-vacancy') ||
+                    group.classList.contains('tb-sup-vacancy');
+
                 this.placeFixedMenu(
                     menu,
                     toggle.getBoundingClientRect(),
                     document.documentElement.clientWidth,
-                    window.innerHeight
+                    window.innerHeight,
+                    isVacancy ? this.VACANCY_MENU_MAX_HEIGHT : 0,
+                    // 2.1.0 D4: the board's own area, right of the side navigation.
+                    container.getBoundingClientRect()
                 );
             }, 0);
         });
@@ -1940,17 +2166,48 @@ class TeamBoardView extends View {
 
     /**
      * U22 — the menu keeps its content width, is right-aligned to its toggle
-     * and stays inside the screen; a menu taller than the space scrolls.
+     * and stays inside the board's visible area and the screen; a menu taller
+     * than the space scrolls. With `maxHeight` (the Reserve list of a "+"), a
+     * longer list keeps that bounded height and scrolls inside.
      *
      * @private
+     * @param {HTMLElement} menu
+     * @param {{left: number, right: number, top: number, bottom: number}} rect The toggle.
+     * @param {number} viewportWidth
+     * @param {number} viewportHeight
+     * @param {number} [maxHeight]
+     * @param {?{left: number, right: number}} [area] The board container (2.1.0 D4).
      */
-    placeFixedMenu(menu, rect, viewportWidth, viewportHeight) {
+    placeFixedMenu(menu, rect, viewportWidth, viewportHeight, maxHeight = 0, area = null) {
         const gap = 2;
         const margin = 8;
-        const width = Math.min(menu.offsetWidth, viewportWidth - 2 * margin);
-        const height = menu.scrollHeight || menu.offsetHeight;
 
-        const left = Math.max(margin, Math.min(rect.right - width, viewportWidth - margin - width));
+        // 2.1.0 D3: Espo marks a group opened near the bottom `dropup`, and
+        // `.dropup .dropdown-menu {top: auto; bottom: 100%}` then keeps a
+        // bottom edge next to the fixed `top` set below: the list collapsed to
+        // its padding. Only `top` places the menu (reset before measuring).
+        menu.style.bottom = 'auto';
+
+        const width = Math.min(menu.offsetWidth, viewportWidth - 2 * margin);
+        const natural = menu.scrollHeight || menu.offsetHeight;
+        const cap = maxHeight > 0 ? Math.min(maxHeight, viewportHeight - 2 * margin) : 0;
+        const height = cap && natural > cap ? cap : natural;
+
+        if (cap && natural > cap) {
+            menu.style.maxHeight = `${cap}px`;
+            menu.style.overflowY = 'auto';
+        }
+
+        // 2.1.0 D4: not under the side navigation — the board area first,
+        // then from its left edge to the screen edge, then the whole screen.
+        const screen = [margin, viewportWidth - margin];
+        const bounds = !area ? [screen] : [
+            [Math.max(margin, area.left), Math.min(viewportWidth - margin, area.right)],
+            [Math.max(margin, area.left), viewportWidth - margin],
+            screen,
+        ];
+        const [minLeft, maxRight] = bounds.find(([from, to]) => to - from >= width) || screen;
+        const left = Math.max(minLeft, Math.min(rect.right - width, maxRight - width));
 
         menu.style.maxWidth = `${viewportWidth - 2 * margin}px`;
         menu.style.right = 'auto';
@@ -1973,6 +2230,15 @@ class TeamBoardView extends View {
 
         // Taller than either side: use the whole screen height and scroll.
         const available = viewportHeight - 2 * margin;
+
+        if (cap) {
+            // A bounded list keeps its height, as close to its toggle as fits.
+            menu.style.top = `${Math.max(margin, Math.min(rect.bottom + gap, viewportHeight - margin - height))}px`;
+            menu.style.maxHeight = `${height}px`;
+            menu.style.overflowY = 'auto';
+
+            return;
+        }
 
         menu.style.top = `${margin}px`;
         menu.style.maxHeight = `${available}px`;
