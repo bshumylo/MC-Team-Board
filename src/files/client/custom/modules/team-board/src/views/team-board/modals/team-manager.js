@@ -75,11 +75,19 @@ class TeamManagerModalView extends ModalView {
             });
         },
         'click [data-action="restoreTeam"]': function (e) {
+            const id = e.currentTarget.dataset.id;
+
+            // C08: the restored team leaves the archive list and shows in the
+            // team list; the dialog stays open (the board is refreshed on close).
             this.request(
                 'post',
-                `TeamBoard/squad/${e.currentTarget.dataset.id}/restore`,
+                `TeamBoard/squad/${id}/restore`,
                 {viewDate: this.options.viewDate},
-                () => this.close()
+                () => {
+                    this.options.archivedTeams = (this.options.archivedTeams || [])
+                        .filter(item => item.id !== id);
+                    this.reRender();
+                }
             );
         },
         'click [data-action="setTeamColour"]': function (e) {
@@ -138,6 +146,8 @@ class TeamManagerModalView extends ModalView {
             teams: (this.options.teams || []).map(item => Object.assign({}, item, {
                 colourOptions: COLOUR_LIST.map(colourKey => ({
                     value: colourKey,
+                    // C05: the accessible name of a dot is the colour name in the user's language.
+                    label: this.getLanguage().translateOption(colourKey, 'colourKey', 'TeamBoardSquad'),
                     selected: (item.colourKey || 'slate') === colourKey,
                 })),
                 // C03: the same Team read check as the board card title.
@@ -471,7 +481,23 @@ class TeamManagerModalView extends ModalView {
         // is fetched, so the current input is read before the comparison.
         this.syncFormState();
 
-        return JSON.stringify(this.formState()) !== this.initialFormState;
+        return this.hasPendingPositionText() ||
+            JSON.stringify(this.formState()) !== this.initialFormState;
+    }
+
+    // C09/U23: a position typed without Enter is not an item of the list yet,
+    // so fetch() cannot see it; the input of the field is read directly.
+    hasPendingPositionText() {
+        const record = this.teamRecordView;
+
+        if (!record || typeof record.getFieldView !== 'function') {
+            return false;
+        }
+
+        const field = record.getFieldView('positionList');
+        const input = field && field.$select;
+
+        return !!input && typeof input.val === 'function' && String(input.val() || '').trim() !== '';
     }
 
     confirmDiscard(callback) {
@@ -519,7 +545,11 @@ class TeamManagerModalView extends ModalView {
     }
 
     archiveTeam(id) {
-        this.confirm(this.translate('Historical assignments remain', 'labels', 'TeamBoard'))
+        const team = this.team(id);
+
+        // C07: the question names the team; the history note is part of the message.
+        this.confirm(this.translate('archiveTeamConfirm', 'messages', 'TeamBoard')
+            .replace('{name}', team ? team.name : ''))
             .then(() => this.request(
                 'post',
                 `TeamBoard/squad/${id}/archive`,

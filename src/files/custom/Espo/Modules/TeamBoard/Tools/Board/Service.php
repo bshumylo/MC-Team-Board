@@ -102,7 +102,7 @@ class Service
         $positionList = Position::listFor($team->get('positionList'));
 
         if (!in_array($position, $positionList, true)) {
-            throw new BadRequest("Not allowed position.");
+            throw $this->badRequest('positionNotAllowed');
         }
 
         $fromTeam = null;

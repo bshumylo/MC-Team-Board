@@ -11,6 +11,7 @@ use Espo\Core\Record\EntityProvider;
 use Espo\Core\Utils\DateTime;
 use Espo\Core\Utils\Language;
 use Espo\Modules\TeamBoard\Tools\Support\LocalizedDenial;
+use Espo\Entities\Team;
 use Espo\Entities\User;
 use Espo\Modules\TeamBoard\Entities\TeamBoardMember;
 use Espo\Modules\TeamBoard\Entities\TeamBoardSquad;
@@ -64,11 +65,11 @@ class ManagementService
 
         if ($member->get('userId') &&
             (property_exists($data, 'firstName') || property_exists($data, 'lastName') || property_exists($data, 'name'))) {
-            throw new BadRequest('Linked EspoCRM identity is read-only in Team Board.');
+            throw $this->badRequest('linkedIdentityReadOnly');
         }
 
         if ($member->get('isArchived')) {
-            throw new BadRequest('Archived board member cannot be edited.');
+            throw $this->badRequest('memberArchivedEdit');
         }
 
         if (!$member->get('userId') &&
@@ -94,7 +95,7 @@ class ManagementService
         $member = $this->member($id);
 
         if ($member->get('userId')) {
-            throw new BadRequest('Linked EspoCRM user cannot be archived from Team Board.');
+            throw $this->badRequest('linkedUserArchive');
         }
 
         $archiveDate = $this->dateTime->getToday()->toString();
@@ -176,12 +177,20 @@ class ManagementService
         $squad = $this->squad($id);
 
         if ($squad->get('isArchived')) {
-            throw new BadRequest('Archived board team cannot be edited.');
+            throw $this->badRequest('teamArchivedEdit');
         }
 
         if ($squad->get('teamId') &&
             (property_exists($data, 'name') || property_exists($data, 'positionList'))) {
-            throw new BadRequest('Linked EspoCRM team name and positions are read-only.');
+            throw $this->badRequest('linkedTeamReadOnly');
+        }
+
+        $linkedTeamId = $squad->get('teamId');
+
+        if (is_string($linkedTeamId) && $linkedTeamId !== '') {
+            // The board hides linked squads of unreadable Teams (findSquads);
+            // a known id must not bypass that. Throws Forbidden/NotFound.
+            $this->entityProvider->getByClass(Team::class, $linkedTeamId);
         }
 
         if (property_exists($data, 'name')) {
@@ -207,7 +216,7 @@ class ManagementService
         $squad = $this->squad($id);
 
         if ($squad->get('teamId')) {
-            throw new BadRequest('Linked EspoCRM team cannot be archived from Team Board.');
+            throw $this->badRequest('linkedTeamArchive');
         }
 
         $fromDate = $this->archiveDate($fromDate);
@@ -229,7 +238,7 @@ class ManagementService
     {
         $this->assertCanEdit();
         $squad = $this->squad($id);
-        if ($squad->get('teamId')) throw new BadRequest('Linked EspoCRM team cannot be restored from Team Board.');
+        if ($squad->get('teamId')) throw $this->badRequest('linkedTeamRestore');
 
         // Restoration always starts now. The open board month is deliberately
         // irrelevant and any scheduled future visibility action is cancelled.
@@ -305,7 +314,7 @@ class ManagementService
         $name = trim($value);
 
         if ($name === '' || mb_strlen($name) > 150) {
-            throw new BadRequest('Name must contain 1 to 150 characters.');
+            throw $this->badRequest('teamNameLength');
         }
 
         return $name;
@@ -378,7 +387,7 @@ class ManagementService
         }
 
         if (mb_strlen($value) > 4000) {
-            throw new BadRequest('Note must contain at most 4000 characters.');
+            throw $this->badRequest('noteLength');
         }
 
         return trim($value);
@@ -468,9 +477,7 @@ class ManagementService
         ])->count();
 
         if ($count > 0) {
-            throw new BadRequest(
-                'A team with current or future assignments cannot be archived.'
-            );
+            throw $this->badRequest('teamHasAssignments');
         }
     }
 
@@ -534,14 +541,14 @@ class ManagementService
             $position = trim($position);
 
             if ($position === '' || mb_strlen($position) > 100) {
-                throw new BadRequest('Each position must contain 1 to 100 characters.');
+                throw $this->badRequest('positionLength');
             }
 
             $positions[$position] = true;
         }
 
         if ($positions === [] || count($positions) > 20) {
-            throw new BadRequest('Position list must contain 1 to 20 unique values.');
+            throw $this->badRequest('positionCount');
         }
 
         return array_keys($positions);

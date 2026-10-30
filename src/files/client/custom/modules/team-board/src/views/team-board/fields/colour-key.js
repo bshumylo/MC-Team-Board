@@ -19,13 +19,13 @@ class ColourKeyFieldView extends EnumFieldView {
     editTemplateContent = `
         <input type="hidden" data-name="{{name}}" value="{{value}}">
         <div class="tb-team-colour-picker tb-team-colour-field" aria-label="{{labelText}}">
-            {{#each colourOptions}}<button type="button" class="tb-colour-dot tb-colour-dot--{{value}}{{#if selected}} is-selected{{/if}}" data-colour-key="{{value}}" aria-label="{{value}}" aria-pressed="{{#if selected}}true{{else}}false{{/if}}"></button>{{/each}}
+            {{#each colourOptions}}<button type="button" class="tb-colour-dot tb-colour-dot--{{value}}{{#if selected}} is-selected{{/if}}" data-colour-key="{{value}}" aria-label="{{label}}" aria-pressed="{{#if selected}}true{{else}}false{{/if}}"></button>{{/each}}
         </div>
     `
 
     detailTemplateContent = `
         <div class="tb-team-colour-picker tb-team-colour-field" aria-label="{{labelText}}">
-            {{#each colourOptions}}<button type="button" class="tb-colour-dot tb-colour-dot--{{value}}{{#if selected}} is-selected{{/if}}" aria-label="{{value}}" aria-pressed="{{#if selected}}true{{else}}false{{/if}}" disabled></button>{{/each}}
+            {{#each colourOptions}}<button type="button" class="tb-colour-dot tb-colour-dot--{{value}}{{#if selected}} is-selected{{/if}}" aria-label="{{label}}" aria-pressed="{{#if selected}}true{{else}}false{{/if}}" disabled></button>{{/each}}
         </div>
     `
 
@@ -42,6 +42,8 @@ class ColourKeyFieldView extends EnumFieldView {
         data.labelText = this.getLabelText();
         data.colourOptions = (this.params.options || []).map(colourKey => ({
             value: colourKey,
+            // C05: the accessible name is the colour name in the user's language.
+            label: this.getLanguage().translateOption(colourKey, this.name, this.entityType),
             selected: colourKey === value,
         }));
 

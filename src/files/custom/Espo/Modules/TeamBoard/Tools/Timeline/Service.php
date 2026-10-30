@@ -300,7 +300,7 @@ class Service
         [$member, $squad, $resolvedSquad] = $this->assertWritable($boardMemberId, $boardSquadId);
 
         if (!in_array($position, $resolvedSquad->positionList, true)) {
-            throw new BadRequest('Not allowed position.');
+            throw $this->badRequest('positionNotAllowed');
         }
 
         $interval = Interval::of($dateFrom, $dateTo);
@@ -381,12 +381,23 @@ class Service
         $structuralChange = !$sameSquad ||
             $position !== $assignment->get('position');
 
+        // A move to another squad also needs visibility of the squad it
+        // leaves, as deleteAssignment requires. That squad may be archived: a
+        // member must still be movable out of it. A Reserve fact has none.
+        $currentSquadInput = (string) ($assignment->get('boardSquadId') ?: $assignment->get('teamId'));
+
+        if (!$sameSquad && $currentSquadInput !== '') {
+            $this->assertTeamVisible(
+                $this->registry->resolveSquad($this->registry->squadFromInput($currentSquadInput))
+            );
+        }
+
         // Only a new team or position is validated against the current
         // position list. Ending or shortening a period keeps its stored
         // position even if that position was since removed from the team,
         // otherwise such a member could not be dragged to Reserve (U21).
         if ($structuralChange && !in_array($position, $resolvedSquad->positionList, true)) {
-            throw new BadRequest('Not allowed position.');
+            throw $this->badRequest('positionNotAllowed');
         }
 
         if ($closingSameDay && !$structuralChange) {
@@ -490,7 +501,7 @@ class Service
             if ($structuralChange) {
                 $effectiveStart = max($dateFrom, $this->today());
                 if ($dateTo !== null && $dateTo <= $effectiveStart) {
-                    throw new BadRequest('End date must be after start date.');
+                    throw $this->badRequest('endBeforeStart');
                 }
                 $existing = $this->entityManager->getRDBRepository(AssignmentQuery::ENTITY_TYPE)->where([
                     'supersedesId' => $assignment->getId(),
@@ -809,7 +820,7 @@ class Service
         $resolvedSquad = $this->registry->resolveSquad($squad);
 
         if ($member->get('isArchived') || $squad->get('isArchived')) {
-            throw new BadRequest('Archived board records cannot receive new assignments.');
+            throw $this->badRequest('archivedNoAssignments');
         }
 
         if ($resolvedMember->isEspoUser) {
@@ -824,9 +835,19 @@ class Service
 
             // The scheduled transition later uses CRM's own Team relation;
             // planning itself requires visibility, not profile edit rights.
+            // A board editor is a trusted manager: the job applies a plan the
+            // editor confirmed as administrator (user decision 2026-10-29).
         }
 
         return [$member, $squad, $resolvedSquad];
+    }
+
+    /** @throws Forbidden|NotFound */
+    private function assertTeamVisible(stdClass $resolvedSquad): void
+    {
+        if ($resolvedSquad->isEspoTeam) {
+            $this->entityProvider->getByClass(Team::class, $resolvedSquad->teamId);
+        }
     }
 
     /** @throws Forbidden */
@@ -1203,7 +1224,7 @@ class Service
         }
 
         if (!Interval::of($dateFrom, $dateTo)->isValid()) {
-            throw new BadRequest('End date must be after the start date.');
+            throw $this->badRequest('endBeforeStart');
         }
     }
 

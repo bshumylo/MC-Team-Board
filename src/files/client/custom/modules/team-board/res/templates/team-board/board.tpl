@@ -398,6 +398,16 @@
     .team-board .tb-menu > .btn {
         padding: 2px 6px;
     }
+    /* The group box of a person menu is a few px larger than its button and,
+       hidden (opacity 0) or not, its corner caught the click meant for the
+       neighbour's "⋯". Only the button and the opened list take the pointer. */
+    .team-board .tb-menu {
+        pointer-events: none;
+    }
+    .team-board .tb-menu > .btn,
+    .team-board .tb-menu > .dropdown-menu {
+        pointer-events: auto;
+    }
     .tb-density {
         flex: 0 0 auto;
     }
@@ -791,6 +801,17 @@
     }
     .tb-drag-preview .tb-avatar {
         flex: 0 0 auto;
+        /* U08: the same size as on the card (--tb-avatar-size is set on the preview). */
+        width: var(--tb-avatar-size, 52px);
+        height: var(--tb-avatar-size, 52px);
+        overflow: hidden;
+        border-radius: 50%;
+    }
+    /* Espo's avatar <img> has an inline `width: var(--52px)`, undefined outside the board. */
+    .tb-drag-preview .tb-avatar > * {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover;
     }
     .tb-drag-preview .tb-drag-name {
         overflow-wrap: anywhere;

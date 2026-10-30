@@ -2,6 +2,7 @@
 
 namespace tests\unit\Espo\Modules\TeamBoard;
 
+use Espo\Core\Utils\Language;
 use Espo\Modules\TeamBoard\Tools\Shadow\Registry;
 use Espo\Modules\TeamBoard\Tools\Timeline\AssignmentEditor;
 use Espo\Modules\TeamBoard\Tools\Timeline\AssignmentQuery;
@@ -175,7 +176,7 @@ class FuturePlanResetterTest extends TestCase
         $em->method('getTransactionManager')->willReturn($transaction);
         $em->method('getEntityById')->willReturnCallback(static fn ($type, $id) => $entities[$id]);
         $em->expects($this->exactly(4))->method('saveEntity');
-        $resetter = new FuturePlanResetter($em, $query, $registry, new AssignmentEditor($em, $query, $registry), $this->createStub(DraftReminder::class));
+        $resetter = new FuturePlanResetter($em, $query, $registry, new AssignmentEditor($em, $query, $registry, $this->createStub(Language::class)), $this->createStub(DraftReminder::class));
 
         $resetter->resetForUser('user');
         $resetter->resetForUser('user');

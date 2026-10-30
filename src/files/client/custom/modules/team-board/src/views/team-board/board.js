@@ -228,7 +228,11 @@ class TeamBoardView extends View {
             : 'all';
         this.viewMode = 'photos';
 
-        this.wait(this.loadTimeline(this.asOfDate));
+        // view.wait() chains only `.then`: a rejected first load (for example a
+        // user without access, 403) would be an unhandled rejection and the
+        // view would never become ready. loadTimeline() has already stored the
+        // error, so the board renders its load-error state with Retry.
+        this.wait(this.loadTimeline(this.asOfDate).catch(() => false));
     }
 
     /**
@@ -538,7 +542,11 @@ class TeamBoardView extends View {
     }
 
     archiveTeam(id) {
-        this.confirm(this.translate('Historical assignments remain', 'labels', 'TeamBoard')).then(() => {
+        const team = (this.boardData.teams || []).find(item => (item.boardSquadId || item.id) === id);
+
+        // C07: the question names the team; the history note is part of the message.
+        this.confirm(this.translate('archiveTeamConfirm', 'messages', 'TeamBoard')
+            .replace('{name}', team ? team.name : '')).then(() => {
             Espo.Ui.notifyWait();
             return Espo.Ajax.postRequest(`TeamBoard/squad/${id}/archive`, {viewDate: this.asOfDate});
         }).then(() => {
@@ -2187,9 +2195,12 @@ class TeamBoardView extends View {
         // bottom edge next to the fixed `top` set below: the list collapsed to
         // its padding. Only `top` places the menu (reset before measuring).
         menu.style.bottom = 'auto';
+        menu.style.marginTop = '';
 
         const width = Math.min(menu.offsetWidth, viewportWidth - 2 * margin);
-        const natural = menu.scrollHeight || menu.offsetHeight;
+        // The border box: scrollHeight leaves out the menu's 1px borders, which
+        // would push an upward list down over its own button.
+        const natural = Math.max(menu.scrollHeight || 0, menu.offsetHeight || 0);
         const cap = maxHeight > 0 ? Math.min(maxHeight, viewportHeight - 2 * margin) : 0;
         const height = cap && natural > cap ? cap : natural;
 
@@ -2223,6 +2234,9 @@ class TeamBoardView extends View {
         }
 
         if (height <= above) {
+            // Bootstrap's 2px `.dropdown-menu` top margin would shift an upward
+            // list down onto its button (U22, 2.1.0 V2 finding).
+            menu.style.marginTop = '0px';
             menu.style.top = `${rect.top - gap - height}px`;
 
             return;
@@ -2232,9 +2246,15 @@ class TeamBoardView extends View {
         const available = viewportHeight - 2 * margin;
 
         if (cap) {
-            // A bounded list keeps its height, as close to its toggle as fits.
-            menu.style.top = `${Math.max(margin, Math.min(rect.bottom + gap, viewportHeight - margin - height))}px`;
-            menu.style.maxHeight = `${height}px`;
+            // U22: a bounded list that fits neither side takes the roomier side
+            // and scrolls there; it never slides over its own button.
+            const useBelow = below >= above;
+            const room = Math.max(0, Math.floor(useBelow ? below : above));
+            const shown = Math.min(height, room);
+
+            menu.style.marginTop = '0px';
+            menu.style.top = useBelow ? `${rect.bottom + gap}px` : `${rect.top - gap - shown}px`;
+            menu.style.maxHeight = `${shown}px`;
             menu.style.overflowY = 'auto';
 
             return;
@@ -2869,6 +2889,14 @@ class TeamBoardView extends View {
         preview.setAttribute('aria-hidden', 'true');
 
         if (avatar) {
+            // U08: the preview lives outside .team-board, so the size variable of
+            // the board is missing there; give it the size the card shows.
+            const avatarSize = Math.round(avatar.offsetWidth || 0);
+
+            if (avatarSize > 0) {
+                preview.style.setProperty('--tb-avatar-size', `${avatarSize}px`);
+            }
+
             preview.appendChild(avatar.cloneNode(true));
         }
 

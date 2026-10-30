@@ -4,7 +4,7 @@
 
 English · [Українська](README.uk.md)
 
-Version **2.1.0** · EspoCRM **10.0.8+** · PHP **8.3+** · AGPL-3.0
+Version **2.1.1** · EspoCRM **10.0.8+** · PHP **8.3+** · AGPL-3.0
 
 ![The board: all teams on one screen](docs/screenshots/en/01-board.png)
 
@@ -22,7 +22,7 @@ Version **2.1.0** · EspoCRM **10.0.8+** · PHP **8.3+** · AGPL-3.0
 
 ## Install
 
-1. Download `team-board-2.1.0.zip` from [Releases](../../releases).
+1. Download `team-board-2.1.1.zip` from [Releases](../../releases).
 2. In EspoCRM open **Administration → Extensions**, upload the ZIP and click **Install**.
 3. Add *Team Board* to the navigation menu (**Administration → User Interface**) and give the roles that need it access (**Administration → Roles**).
 

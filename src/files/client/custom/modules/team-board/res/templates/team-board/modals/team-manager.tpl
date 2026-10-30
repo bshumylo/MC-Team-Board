@@ -1,5 +1,12 @@
 <style>
     .tb-team-colour-picker { display: flex; flex-wrap: wrap; gap: 4px; }
+    /* C05/U23: in the team list the 13 dots stay on one row; a narrow column
+       makes the neighbouring name wrap, never the dots (the form keeps wrapping). */
+    .table .tb-team-colour-picker { flex-wrap: nowrap; }
+    @media (max-width: 767px) {
+        .table .tb-team-colour-picker { gap: 2px; }
+        .table .tb-team-colour-picker .tb-colour-dot { width: 14px; height: 14px; }
+    }
     /* In the form the dots sit on the line of the neighbouring name input (C09 №8). */
     .tb-team-colour-field { min-height: var(--input-height-base, 2.25rem); align-items: center; }
     .tb-colour-dot { width: 18px; height: 18px; padding: 0; border: 2px solid transparent; border-radius: 50%; }
@@ -26,7 +33,7 @@
     <thead><tr><th>{{teamNameLabel}}</th><th>{{colourLabel}}</th><th>{{teamTypeLabel}}</th></tr></thead>
     <tbody>{{#each teams}}<tr>
         <td>{{#if isEspoTeam}}{{#if teamLink}}<a href="{{teamLink}}" data-action="openSystemTeam">{{name}}</a>{{else}}{{name}}{{/if}}{{else}}<a role="button" data-action="editTeam" data-id="{{boardSquadId}}">{{name}}</a>{{/if}}</td>
-        <td><div class="tb-team-colour-picker" aria-label="{{../colourLabel}}">{{#each colourOptions}}<button type="button" class="tb-colour-dot tb-colour-dot--{{value}}{{#if selected}} is-selected{{/if}}" data-action="setTeamColour" data-id="{{../boardSquadId}}" data-colour-key="{{value}}" aria-label="{{value}}"></button>{{/each}}</div></td>
+        <td><div class="tb-team-colour-picker" aria-label="{{../colourLabel}}">{{#each colourOptions}}<button type="button" class="tb-colour-dot tb-colour-dot--{{value}}{{#if selected}} is-selected{{/if}}" data-action="setTeamColour" data-id="{{../boardSquadId}}" data-colour-key="{{value}}" aria-label="{{label}}"></button>{{/each}}</div></td>
         <td>{{typeLabel}}</td>
     </tr>{{/each}}</tbody>
 </table>

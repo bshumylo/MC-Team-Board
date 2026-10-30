@@ -38,7 +38,7 @@ The board shows every team as a card with its members and their positions (by de
 
 ### Access control
 
-The board uses the standard EspoCRM permission model; nothing is bypassed.
+The board uses the standard EspoCRM roles. Grant the board's *Assignments* scope **Edit = All** only to trusted managers (one or two people): a plan that such an editor confirms is applied by the scheduled job as an administrator, even if the editor cannot edit that user or team in the CRM. The levels *Own* and *Team* are treated as *All*.
 
 | Role | What it can do |
 |---|---|
@@ -47,7 +47,7 @@ The board uses the standard EspoCRM permission model; nothing is bypassed.
 | Viewer | Read-only: sees the board, history and notes |
 | No board access, Portal users | No access; every API call is refused |
 
-Denied actions return a clear message in the user's language. Writing to a CRM user's teams still requires the usual EspoCRM permission to edit that user.
+Denied actions return a clear message in the user's language. An immediate change of a CRM user's teams still requires the usual EspoCRM permission to edit that user and the team.
 
 ## Requirements
 
@@ -67,7 +67,7 @@ Version 2 installs over version 1. Existing data is kept and linked to the new r
 
 ```bash
 npm ci
-npm run extension      # creates build/team-board-2.1.0.zip
+npm run extension      # creates build/team-board-2.1.1.zip
 ```
 
 If npm refuses to fetch the build tools from GitHub (`Fetching packages of type "git" have been disabled`), run `npm ci --allow-git=all` instead of `npm ci`.

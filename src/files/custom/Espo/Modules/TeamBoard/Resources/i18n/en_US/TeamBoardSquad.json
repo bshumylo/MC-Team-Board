@@ -19,11 +19,17 @@
         "colourKey": {
             "slate": "Slate",
             "blue": "Blue",
+            "sky": "Sky",
             "teal": "Teal",
             "green": "Green",
+            "lime": "Lime",
             "amber": "Amber",
+            "orange": "Orange",
             "rose": "Rose",
-            "violet": "Violet"
+            "pink": "Pink",
+            "violet": "Violet",
+            "purple": "Purple",
+            "indigo": "Indigo"
         }
     }
 }

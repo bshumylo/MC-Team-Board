@@ -2,6 +2,7 @@
 
 namespace tests\unit\Espo\Modules\TeamBoard;
 
+use Espo\Core\Utils\Language;
 use Espo\Modules\TeamBoard\Tools\Shadow\Registry;
 use Espo\Modules\TeamBoard\Tools\Timeline\AssignmentEditor;
 use Espo\Modules\TeamBoard\Tools\Timeline\AssignmentQuery;
@@ -63,7 +64,7 @@ class PredecessorRestorationTest extends TestCase
             });
         $em->expects($action === 'delete' ? $this->once() : $this->never())
             ->method('removeEntity')->with($assignment);
-        $editor = new AssignmentEditor($em, $this->createStub(AssignmentQuery::class), $this->createStub(Registry::class));
+        $editor = new AssignmentEditor($em, $this->createStub(AssignmentQuery::class), $this->createStub(Registry::class), $this->createStub(Language::class));
 
         if ($action === 'delete') {
             $editor->delete($assignment);

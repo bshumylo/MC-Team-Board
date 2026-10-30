@@ -31,6 +31,9 @@
     .tb-person-panel .history-container .inline-save-link + .inline-edit-link + .field {
         clear: both;
     }
+    /* A team name of 120 characters without spaces wraps inside its cell instead
+       of widening the table past the dialog body (all widths). */
+    .tb-person-panel .history-container td { min-width: 0; overflow-wrap: anywhere; }
     /* Narrow screen (Review №25 round 3 / T12): the six History columns do
        not fit a phone-width panel, so each row becomes a stacked block with
        the column name beside each value; Status stays reachable without

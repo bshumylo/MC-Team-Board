@@ -51,13 +51,13 @@ class PhotoService
         $resolved = $this->registry->resolveMember($member);
 
         if ($member->get('isArchived')) {
-            throw new BadRequest('Archived board member cannot receive a photo.');
+            throw $this->badRequest('photoMemberArchived');
         }
 
         $systemAvatarId = $resolved->systemAvatarId;
 
         if (is_string($systemAvatarId) && $systemAvatarId !== '') {
-            throw new BadRequest('EspoCRM avatar takes precedence; board photo upload is disabled.');
+            throw $this->badRequest('photoSystemAvatar');
         }
 
         [$name, $type, $contents] = $this->decodeUpload($data);
@@ -207,7 +207,7 @@ class PhotoService
         $contents = base64_decode($matches[2], true);
 
         if ($contents === false || $matches[1] !== $data->type) {
-            throw new BadRequest('Board photo MIME header does not match the request.');
+            throw $this->badRequest('photoMimeHeader');
         }
 
         $this->assertValidImage($data->name, $data->type, $contents);
@@ -220,11 +220,11 @@ class PhotoService
         $size = strlen($contents);
 
         if ($size < 1 || $size > self::MAX_BYTES) {
-            throw new BadRequest('Board photo must be between 1 byte and 5 MiB.');
+            throw $this->badRequest('photoSize');
         }
 
         if (!isset(self::MIME_EXTENSION_MAP[$type])) {
-            throw new BadRequest('Unsupported board photo MIME type.');
+            throw $this->badRequest('photoMimeType');
         }
 
         $basename = basename($name);
@@ -232,18 +232,18 @@ class PhotoService
 
         if (substr_count($basename, '.') !== 1 ||
             !in_array($extension, self::MIME_EXTENSION_MAP[$type], true)) {
-            throw new BadRequest('Board photo filename or extension does not match its MIME type.');
+            throw $this->badRequest('photoFileName');
         }
 
         $image = getimagesizefromstring($contents);
 
         if ($image === false || $image['mime'] !== $type) {
-            throw new BadRequest('Board photo cannot be decoded or MIME does not match.');
+            throw $this->badRequest('photoDecode');
         }
 
         if ($image[0] < 1 || $image[1] < 1 ||
             $image[0] > self::MAX_DIMENSION || $image[1] > self::MAX_DIMENSION) {
-            throw new BadRequest('Board photo dimensions must not exceed 4096 × 4096.');
+            throw $this->badRequest('photoDimensions');
         }
     }
 

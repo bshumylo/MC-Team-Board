@@ -3,6 +3,7 @@
 namespace tests\unit\Espo\Modules\TeamBoard;
 
 use Espo\Core\Exceptions\BadRequest;
+use Espo\Core\Utils\Language;
 use Espo\Modules\TeamBoard\Tools\Shadow\Registry;
 use Espo\Modules\TeamBoard\Tools\Timeline\AssignmentEditor;
 use Espo\Modules\TeamBoard\Tools\Timeline\AssignmentQuery;
@@ -24,7 +25,7 @@ class AssignmentTargetTest extends TestCase
         } else {
             $em->expects($this->never())->method('getTransactionManager');
         }
-        return new AssignmentEditor($em, $this->createStub(AssignmentQuery::class), $this->createStub(Registry::class));
+        return new AssignmentEditor($em, $this->createStub(AssignmentQuery::class), $this->createStub(Registry::class), $this->createStub(Language::class));
     }
 
     public function testAssignmentWithoutAnyTeamIsRejected(): void

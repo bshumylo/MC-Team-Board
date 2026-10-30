@@ -2,6 +2,7 @@
 
 namespace tests\unit\Espo\Modules\TeamBoard;
 
+use Espo\Core\Utils\Language;
 use Espo\Modules\TeamBoard\Tools\Shadow\Registry;
 use Espo\Modules\TeamBoard\Tools\Timeline\AssignmentEditor;
 use Espo\Modules\TeamBoard\Tools\Timeline\AssignmentQuery;
@@ -37,7 +38,7 @@ class DraftIsolationTest extends TestCase
         $em->expects($this->never())->method('getRDBRepository');
         $query = $this->createStub(AssignmentQuery::class);
         $query->method('findForMember')->willReturn($existing);
-        return new AssignmentEditor($em, $query, $this->createStub(Registry::class));
+        return new AssignmentEditor($em, $query, $this->createStub(Registry::class), $this->createStub(Language::class));
     }
 
     private function predecessor(string $status = Status::CONFIRMED): Entity

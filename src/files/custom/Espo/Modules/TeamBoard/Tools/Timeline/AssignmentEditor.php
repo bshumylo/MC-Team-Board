@@ -2,9 +2,10 @@
 
 namespace Espo\Modules\TeamBoard\Tools\Timeline;
 
-use Espo\Core\Exceptions\BadRequest;
+use Espo\Core\Utils\Language;
 use Espo\Modules\TeamBoard\Tools\Board\Position;
 use Espo\Modules\TeamBoard\Tools\Shadow\Registry;
+use Espo\Modules\TeamBoard\Tools\Support\LocalizedDenial;
 use Espo\ORM\Entity;
 use Espo\ORM\EntityManager;
 
@@ -17,12 +18,15 @@ use Espo\ORM\EntityManager;
  */
 class AssignmentEditor
 {
+    use LocalizedDenial;
+
     public const ENTITY_TYPE = 'TeamBoardAssignment';
 
     public function __construct(
         private EntityManager $entityManager,
         private AssignmentQuery $query,
         private Registry $registry,
+        private Language $language,
     ) {}
 
     /**
@@ -252,7 +256,7 @@ class AssignmentEditor
     private function assertTarget(?string $boardSquadId, ?string $teamId): void
     {
         if (($boardSquadId === null || $boardSquadId === '') && ($teamId === null || $teamId === '')) {
-            throw new BadRequest('An assignment needs a team.');
+            throw $this->badRequest('assignmentNeedsTeam');
         }
     }
 
@@ -530,7 +534,7 @@ class AssignmentEditor
             }
 
             if ($interval->overlaps($other)) {
-                throw new BadRequest('The person already holds this position in this team for part of the period.');
+                throw $this->badRequest('positionOverlap');
             }
         }
     }
